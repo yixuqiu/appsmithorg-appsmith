@@ -9,10 +9,7 @@ import {
   commitToRepoInit,
   fetchGitStatusSuccess,
 } from "actions/gitSyncActions";
-import { COMMITTING_AND_PUSHING_CHANGES } from "@appsmith/constants/messages";
-import { FEATURE_FLAG } from "@appsmith/entities/FeatureFlag";
-import { DEFAULT_FEATURE_FLAG_VALUE } from "@appsmith/entities/FeatureFlag";
-import { fetchFeatureFlagsSuccess } from "actions/userActions";
+import { COMMITTING_AND_PUSHING_CHANGES } from "ee/constants/messages";
 
 describe("Tests for git deploy modal", () => {
   it("Should show progress bar for JS Library diffs", () => {
@@ -23,6 +20,7 @@ describe("Tests for git deploy modal", () => {
         </ThemeProvider>
       </Provider>,
     );
+
     store.dispatch(
       fetchGitStatusSuccess({
         modified: ["application.json"],
@@ -60,13 +58,8 @@ describe("Tests for git deploy modal", () => {
         migrationMessage: "",
       }),
     );
-    store.dispatch(
-      fetchFeatureFlagsSuccess({
-        ...DEFAULT_FEATURE_FLAG_VALUE,
-        [FEATURE_FLAG.release_git_status_granular_enabled]: true,
-      }),
-    );
     const diffText = component.getByText("1 js lib added");
+
     expect(diffText).toBeDefined();
     store.dispatch(
       commitToRepoInit({
@@ -75,6 +68,7 @@ describe("Tests for git deploy modal", () => {
       }),
     );
     const progressBar = component.getByText(COMMITTING_AND_PUSHING_CHANGES());
+
     expect(progressBar).toBeDefined();
   });
 });

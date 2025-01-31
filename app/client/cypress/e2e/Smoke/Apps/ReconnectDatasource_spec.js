@@ -7,7 +7,9 @@ import {
 
 describe(
   "Reconnect Datasource Modal validation while importing application",
-  { tags: ["@tag.Datasource", "@tag.Sanity"] },
+  {
+    tags: ["@tag.Datasource", "@tag.Sanity", "@tag.Git", "@tag.AccessControl"],
+  },
   function () {
     let workspaceId;
     let appid;
@@ -48,7 +50,7 @@ describe(
             } else {
               cy.get(homePageLocators.toastMessage).should(
                 "contain",
-                "Application imported successfully",
+                Cypress.env("MESSAGES").IMPORT_APP_SUCCESSFUL(),
               );
             }
             // check datasource configured success modal

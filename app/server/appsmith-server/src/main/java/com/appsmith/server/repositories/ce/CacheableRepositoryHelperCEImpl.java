@@ -6,6 +6,7 @@ import com.appsmith.server.constants.FieldName;
 import com.appsmith.server.domains.Config;
 import com.appsmith.server.domains.PermissionGroup;
 import com.appsmith.server.domains.Tenant;
+import com.appsmith.server.domains.TenantConfiguration;
 import com.appsmith.server.domains.User;
 import com.appsmith.server.domains.Workspace;
 import com.appsmith.server.exceptions.AppsmithError;
@@ -13,16 +14,22 @@ import com.appsmith.server.exceptions.AppsmithException;
 import com.appsmith.server.helpers.InMemoryCacheableRepositoryHelper;
 import com.appsmith.server.helpers.ce.bridge.Bridge;
 import com.appsmith.server.helpers.ce.bridge.BridgeQuery;
+import io.micrometer.observation.ObservationRegistry;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.minidev.json.JSONObject;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+import reactor.core.observability.micrometer.Micrometer;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.appsmith.external.constants.spans.TenantSpan.FETCH_TENANT_FROM_DB_SPAN;
 import static com.appsmith.server.constants.FieldName.PERMISSION_GROUP_ID;
 import static com.appsmith.server.constants.ce.FieldNameCE.ANONYMOUS_USER;
 import static com.appsmith.server.constants.ce.FieldNameCE.DEFAULT_PERMISSION_GROUP;
@@ -31,16 +38,12 @@ import static com.appsmith.server.repositories.ce.BaseAppsmithRepositoryCEImpl.n
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class CacheableRepositoryHelperCEImpl implements CacheableRepositoryHelperCE {
     private final ReactiveMongoOperations mongoOperations;
     private final InMemoryCacheableRepositoryHelper inMemoryCacheableRepositoryHelper;
-
-    public CacheableRepositoryHelperCEImpl(
-            ReactiveMongoOperations mongoOperations,
-            InMemoryCacheableRepositoryHelper inMemoryCacheableRepositoryHelper) {
-        this.mongoOperations = mongoOperations;
-        this.inMemoryCacheableRepositoryHelper = inMemoryCacheableRepositoryHelper;
-    }
+    private final ObservationRegistry observationRegistry;
+    private static final String CACHE_DEFAULT_PAGE_ID_TO_DEFAULT_APPLICATION_ID = "pageIdToAppId";
 
     @Cache(cacheName = "permissionGroupsForUser", key = "{#user.email + #user.tenantId}")
     @Override
@@ -165,5 +168,50 @@ public class CacheableRepositoryHelperCEImpl implements CacheableRepositoryHelpe
                 })
                 .doOnSuccess(permissionGroupId ->
                         inMemoryCacheableRepositoryHelper.setInstanceAdminPermissionGroupId(permissionGroupId));
+    }
+
+    /**
+     * Returns the default tenant from the cache if present.
+     * If not present in cache, then it fetches the default tenant from the database and adds to redis.
+     * @param tenantId
+     * @return
+     */
+    @Cache(cacheName = "tenant", key = "{#tenantId}")
+    @Override
+    public Mono<Tenant> fetchDefaultTenant(String tenantId) {
+        BridgeQuery<Tenant> defaultTenantCriteria = Bridge.equal(Tenant.Fields.slug, FieldName.DEFAULT);
+        BridgeQuery<Tenant> notDeletedCriteria = notDeleted();
+        BridgeQuery<Tenant> andCriteria = Bridge.and(defaultTenantCriteria, notDeletedCriteria);
+        Query query = new Query();
+        query.addCriteria(andCriteria);
+        log.info("Fetching tenant from database as it couldn't be found in the cache!");
+        return mongoOperations
+                .findOne(query, Tenant.class)
+                .map(tenant -> {
+                    if (tenant.getTenantConfiguration() == null) {
+                        tenant.setTenantConfiguration(new TenantConfiguration());
+                    }
+                    return tenant;
+                })
+                .name(FETCH_TENANT_FROM_DB_SPAN)
+                .tap(Micrometer.observation(observationRegistry));
+    }
+
+    @CacheEvict(cacheName = "tenant", key = "{#tenantId}")
+    @Override
+    public Mono<Void> evictCachedTenant(String tenantId) {
+        return Mono.empty().then();
+    }
+
+    @Cache(cacheName = CACHE_DEFAULT_PAGE_ID_TO_DEFAULT_APPLICATION_ID, key = "{#basePageId}")
+    @Override
+    public Mono<String> fetchBaseApplicationId(String basePageId, String baseApplicationId) {
+        return !StringUtils.hasText(baseApplicationId) ? Mono.empty() : Mono.just(baseApplicationId);
+    }
+
+    @CacheEvict(cacheName = CACHE_DEFAULT_PAGE_ID_TO_DEFAULT_APPLICATION_ID, keys = "#basePageIds")
+    @Override
+    public Mono<Boolean> evictCachedBasePageIds(List<String> basePageIds) {
+        return Mono.just(Boolean.TRUE);
     }
 }

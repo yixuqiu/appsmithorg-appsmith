@@ -16,6 +16,8 @@ import {
 import { useWidgetDragResize } from "utils/hooks/dragResizeHooks";
 import type { AnvilDnDListenerStates } from "./useAnvilDnDListenerStates";
 import type { LayoutElementPositions } from "layoutSystems/common/types";
+import type { AnvilDetachedWidgetsDnDDetail } from "../../hooks/useAnvilDetachedWidgetsDnD";
+import { widgetHierarchy } from "layoutSystems/anvil/utils/constants";
 
 export const useAnvilDnDEventCallbacks = ({
   anvilDnDListenerRef,
@@ -41,6 +43,7 @@ export const useAnvilDnDEventCallbacks = ({
     activateOverlayWidgetDrop,
     allowToDrop,
     canActivate,
+    currentWidgetHierarchy,
     draggedBlocks,
     edgeCompensatorValues,
     isCurrentDraggedCanvas,
@@ -72,6 +75,7 @@ export const useAnvilDnDEventCallbacks = ({
     if (anvilDnDListenerRef.current) {
       removeDisallowDroppingsUI(anvilDnDListenerRef.current);
     }
+
     canvasIsDragging.current = false;
     dispatch(setHighlightsDrawnAction());
     setHighlightShown(null);
@@ -89,6 +93,7 @@ export const useAnvilDnDEventCallbacks = ({
       // Invoke onDrop callback with the appropriate highlight info
       onDrop(currentSelectedHighlight.current);
     }
+
     resetCanvasState();
   }, [
     allowToDrop,
@@ -119,6 +124,7 @@ export const useAnvilDnDEventCallbacks = ({
           const compensatedHighlight = getHighlightCompensator(
             currentSelectedHighlight.current,
           );
+
           dispatch(setHighlightsDrawnAction(compensatedHighlight));
           setHighlightShown(compensatedHighlight);
         }
@@ -138,6 +144,8 @@ export const useAnvilDnDEventCallbacks = ({
   );
 
   const onMouseOver = useCallback(
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (e: any) => {
       if (canActivate) {
         setDraggingCanvas(layoutId);
@@ -154,8 +162,10 @@ export const useAnvilDnDEventCallbacks = ({
           if (anvilDnDListenerRef.current && !allowToDrop) {
             // Render disallow message if dropping is not allowed
             renderDisallowDroppingUI(anvilDnDListenerRef.current);
+
             return;
           }
+
           // Get the closest highlight based on the mouse position
           const processedHighlight = getClosestHighlight(
             {
@@ -164,6 +174,7 @@ export const useAnvilDnDEventCallbacks = ({
             },
             allHighlightsRef.current,
           );
+
           if (processedHighlight) {
             currentSelectedHighlight.current = processedHighlight;
             throttledSetHighlight();
@@ -175,10 +186,13 @@ export const useAnvilDnDEventCallbacks = ({
   );
 
   const onMouseMove = useCallback(
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (e: any) => {
       if (!canActivate) {
         return;
       }
+
       if (isCurrentDraggedCanvas) {
         // dragging state is set and the canvas is already being used to drag
         if (canvasIsDragging.current) {
@@ -208,10 +222,26 @@ export const useAnvilDnDEventCallbacks = ({
   );
 
   const onMouseOut = useCallback(() => {
-    setDraggingCanvas("");
-  }, [setDraggingCanvas]);
+    if (currentWidgetHierarchy !== widgetHierarchy.WDS_MODAL_WIDGET) {
+      // mouse out is handled by useAnvilDetachedWidgetsDnD for detached widgets(modal widgets)
+      setDraggingCanvas("");
+    }
+  }, [setDraggingCanvas, currentWidgetHierarchy]);
+
+  const onMouseMoveForDetachedWidgets = useCallback(
+    ((e: CustomEvent<AnvilDetachedWidgetsDnDDetail>) => {
+      if (currentWidgetHierarchy === widgetHierarchy.WDS_MODAL_WIDGET) {
+        anvilDnDListenerRef.current?.dispatchEvent(
+          new MouseEvent("mousemove", e.detail.event),
+        );
+      }
+    }) as EventListener,
+    [currentWidgetHierarchy],
+  );
+
   return {
     onMouseMove,
+    onMouseMoveForDetachedWidgets,
     onMouseOver,
     onMouseOut,
     onMouseUp,

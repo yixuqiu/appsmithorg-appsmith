@@ -12,7 +12,7 @@ const iconAlignmentProperty = ".t--property-control-position";
 
 describe(
   "Button Widget Functionality",
-  { tags: ["@tag.Widget", "@tag.Button"] },
+  { tags: ["@tag.Widget", "@tag.Button", "@tag.Binding"] },
   function () {
     before(() => {
       _.agHelper.AddDsl("newFormDsl");
@@ -89,7 +89,7 @@ describe(
       //Changing the text on the Button
       cy.testJsontext("label", this.dataSet.ButtonLabel);
 
-      cy.assertPageSave();
+      _.agHelper.AssertAutoSave();
 
       //Verify the Button name and label
       cy.get(widgetsPage.buttonWidget).trigger("mouseover");

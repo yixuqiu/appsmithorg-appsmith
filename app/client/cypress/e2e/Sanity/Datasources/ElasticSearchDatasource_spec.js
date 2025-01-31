@@ -6,10 +6,12 @@ let elasticSearchName;
 
 describe(
   "Elastic search datasource tests",
-  { tags: ["@tag.Datasource", "@tag.Sanity"] },
+  {
+    tags: ["@tag.Datasource", "@tag.Sanity", "@tag.Git", "@tag.AccessControl"],
+  },
   function () {
     beforeEach(() => {
-      cy.startRoutesForDatasource();
+      dataSources.StartDataSourceRoutes();
     });
 
     it("1. Create elastic search datasource", function () {

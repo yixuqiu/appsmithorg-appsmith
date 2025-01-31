@@ -1,11 +1,11 @@
-import type { PluginType } from "entities/Action";
+import type { PluginType } from "entities/Plugin";
 
 type ID = string;
 
 export enum MODULE_TYPE {
   QUERY = "QUERY_MODULE",
-  JS = "JS",
-  UI = "UI",
+  JS = "JS_MODULE",
+  UI = "UI_MODULE",
 }
 
 export interface ModuleInput {
@@ -17,8 +17,10 @@ export interface ModuleInputSection {
   children?: ModuleInput[];
 }
 
-export interface Module extends ModuleMetadata {
+export interface Module
+  extends Pick<ModuleMetadata, "pluginId" | "pluginType" | "datasourceId"> {
   id: ID;
+  baseId: ID;
   name: string;
   packageId: ID;
   inputsForm: ModuleInputSection[];
@@ -30,4 +32,10 @@ export interface ModuleMetadata {
   datasourceId?: string;
   pluginId: string;
   pluginType: PluginType;
+}
+
+export enum PACKAGE_PULL_STATUS {
+  UPGRADABLE = "UPGRADABLE",
+  UPGRADED = "UPGRADED",
+  UPGRADING = "UPGRADING",
 }

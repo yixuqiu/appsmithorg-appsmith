@@ -32,8 +32,9 @@ export class DeployMode {
     ".t--app-viewer-navigation-header .t--app-viewer-back-to-apps-button";
   private _homeAppsmithImage = "a.t--appsmith-logo";
   public _deployPageWidgets =
-    ".bp3-heading, section.canvas div.canvas:not(:empty)";
+    ".bp3-heading, section.canvas [data-testid=t--app-viewer-page]:not(:empty)";
   public _appViewPageName = `div.t--app-viewer-application-name`;
+  public homePagaHeader = `[data-testid="t--appsmith-page-header"]`;
 
   //refering PublishtheApp from command.js
   public DeployApp(
@@ -154,8 +155,7 @@ export class DeployMode {
 
   public NavigateToHomeDirectly() {
     this.agHelper.GetNClick(this._backtoHome);
-    this.agHelper.Sleep(2000);
-    this.agHelper.AssertElementVisibility(this._homeAppsmithImage);
+    this.agHelper.WaitUntilEleAppear(this.homePagaHeader);
   }
 
   public EnterJSONInputValue(

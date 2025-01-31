@@ -10,15 +10,15 @@ LABEL maintainer="tech@appsmith.com"
 WORKDIR /opt/appsmith
 
 # The env variables are needed for Appsmith server to correctly handle non-roman scripts like Arabic.
-ENV LANG C.UTF-8
-ENV LC_ALL C.UTF-8
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
 
 # Install dependency packages
 RUN set -o xtrace \
   && apt-get update \
   && apt-get upgrade --yes \
   && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --yes \
-    supervisor curl nfs-common gnupg wget netcat openssh-client \
+    supervisor curl nfs-common gnupg \
     gettext \
     ca-certificates \
   # Install MongoDB v5, Redis, PostgreSQL v13
@@ -27,8 +27,10 @@ RUN set -o xtrace \
   && echo "deb http://apt.postgresql.org/pub/repos/apt $(grep CODENAME /etc/lsb-release | cut -d= -f2)-pgdg main" | tee /etc/apt/sources.list.d/pgdg.list \
   && curl --silent --show-error --location https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
   && apt update \
-  && apt-get install --no-install-recommends --yes mongodb-org redis postgresql-13 \
+  && apt-get install --no-install-recommends --yes mongodb-org redis postgresql-14 \
   && apt-get clean
+
+ENV PATH="/usr/lib/postgresql/14/bin:${PATH}"
 
 # Install Java
 RUN set -o xtrace \
@@ -42,12 +44,31 @@ RUN set -o xtrace \
   | tar -xz -C /opt/java --strip-components 1
 
 # Install NodeJS
-RUN set -o xtrace \
-  && mkdir -p /opt/node \
-  && file="$(curl -sS 'https://nodejs.org/dist/latest-v20.x/' | awk -F\" '$2 ~ /linux-'"$(uname -m | sed 's/x86_64/x64/; s/aarch64/arm64/')"'.tar.gz/ {print $2}')" \
-  && curl "https://nodejs.org/dist/latest-v20.x/$file" | tar -xz -C /opt/node --strip-components 1
+RUN <<END
+  set -eo xtrace
+
+  mkdir -p /opt/node
+  arch="$(uname -m | sed 's/x86_64/x64/; s/aarch64/arm64/')"
+
+  curl -LOsS "https://nodejs.org/dist/latest-v20.x/SHASUMS256.txt"
+  filename="$(awk '/linux-'"$arch"'.tar.gz/ {print $2}' SHASUMS256.txt)"
+
+  curl -LOsS "https://nodejs.org/dist/latest-v20.x/$filename"
+  grep "$filename" SHASUMS256.txt | sha256sum -c -
+  tar -xzf "$filename" -C /opt/node --strip-components 1
+
+  rm "$filename" SHASUMS256.txt
+END
 
 # Install Caddy
+RUN set -o xtrace \
+  && mkdir -p /opt/caddy \
+  && version="$(curl --write-out '%{redirect_url}' 'https://github.com/caddyserver/caddy/releases/latest' | sed 's,.*/v,,')" \
+  && curl --location "https://github.com/caddyserver/caddy/releases/download/v$version/caddy_${version}_linux_$(uname -m | sed 's/x86_64/amd64/; s/aarch64/arm64/').tar.gz" \
+  | tar -xz -C /opt/caddy
+
+RUN mv /opt/caddy/caddy /opt/caddy/caddy_vanilla
+
 COPY --from=caddybuilder /usr/bin/caddy /opt/caddy/caddy
 
 # Clean up

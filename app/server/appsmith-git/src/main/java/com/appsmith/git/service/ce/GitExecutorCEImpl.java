@@ -1,5 +1,6 @@
 package com.appsmith.git.service.ce;
 
+import com.appsmith.external.configurations.git.GitConfig;
 import com.appsmith.external.constants.AnalyticsEvents;
 import com.appsmith.external.constants.ErrorReferenceDocUrl;
 import com.appsmith.external.dtos.GitBranchDTO;
@@ -80,6 +81,7 @@ public class GitExecutorCEImpl implements GitExecutor {
     private final RepositoryHelper repositoryHelper = new RepositoryHelper();
 
     private final GitServiceConfig gitServiceConfig;
+    private final GitConfig gitConfig;
 
     protected final ObservationRegistry observationRegistry;
 
@@ -222,49 +224,56 @@ public class GitExecutorCEImpl implements GitExecutor {
         // open the repo
         Path baseRepoPath = createRepoPath(repoSuffix);
 
-        return Mono.using(
-                        () -> Git.open(baseRepoPath.toFile()),
-                        git -> Mono.fromCallable(() -> {
-                                    log.debug(Thread.currentThread().getName() + ": pushing changes to remote "
-                                            + remoteUrl);
-                                    // open the repo
-                                    Stopwatch processStopwatch = StopwatchHelpers.startStopwatch(
-                                            baseRepoPath, AnalyticsEvents.GIT_PUSH.getEventName());
-                                    TransportConfigCallback transportConfigCallback =
-                                            new SshTransportConfigCallback(privateKey, publicKey);
+        return gitConfig.getIsAtomicPushAllowed().flatMap(isAtomicPushAllowed -> {
+            return Mono.using(
+                            () -> Git.open(baseRepoPath.toFile()),
+                            git -> Mono.fromCallable(() -> {
+                                        log.debug(Thread.currentThread().getName() + ": pushing changes to remote "
+                                                + remoteUrl);
+                                        // open the repo
+                                        Stopwatch processStopwatch = StopwatchHelpers.startStopwatch(
+                                                baseRepoPath, AnalyticsEvents.GIT_PUSH.getEventName());
+                                        TransportConfigCallback transportConfigCallback =
+                                                new SshTransportConfigCallback(privateKey, publicKey);
 
-                                    StringBuilder result = new StringBuilder("Pushed successfully with status : ");
-                                    git.push()
-                                            .setTransportConfigCallback(transportConfigCallback)
-                                            .setRemote(remoteUrl)
-                                            .call()
-                                            .forEach(pushResult -> pushResult
-                                                    .getRemoteUpdates()
-                                                    .forEach(remoteRefUpdate -> {
-                                                        result.append(remoteRefUpdate.getStatus())
-                                                                .append(",");
-                                                        if (!StringUtils.isEmptyOrNull(remoteRefUpdate.getMessage())) {
-                                                            result.append(remoteRefUpdate.getMessage())
+                                        StringBuilder result = new StringBuilder("Pushed successfully with status : ");
+                                        git.push()
+                                                .setAtomic(isAtomicPushAllowed)
+                                                .setTransportConfigCallback(transportConfigCallback)
+                                                .setRemote(remoteUrl)
+                                                .call()
+                                                .forEach(pushResult -> pushResult
+                                                        .getRemoteUpdates()
+                                                        .forEach(remoteRefUpdate -> {
+                                                            result.append(remoteRefUpdate.getStatus())
                                                                     .append(",");
-                                                        }
-                                                    }));
-                                    // We can support username and password in future if needed
-                                    // pushCommand.setCredentialsProvider(new
-                                    // UsernamePasswordCredentialsProvider("username",
-                                    // "password"));
-                                    processStopwatch.stopAndLogTimeInMillis();
-                                    return result.substring(0, result.length() - 1);
-                                })
-                                .timeout(Duration.ofMillis(Constraint.TIMEOUT_MILLIS))
-                                .name(GitSpan.FS_PUSH)
-                                .tap(Micrometer.observation(observationRegistry)),
-                        Git::close)
-                .subscribeOn(scheduler);
+                                                            if (!StringUtils.isEmptyOrNull(
+                                                                    remoteRefUpdate.getMessage())) {
+                                                                result.append(remoteRefUpdate.getMessage())
+                                                                        .append(",");
+                                                            }
+                                                        }));
+                                        // We can support username and password in future if needed
+                                        // pushCommand.setCredentialsProvider(new
+                                        // UsernamePasswordCredentialsProvider("username",
+                                        // "password"));
+                                        processStopwatch.stopAndLogTimeInMillis();
+                                        return result.substring(0, result.length() - 1);
+                                    })
+                                    .timeout(Duration.ofMillis(Constraint.TIMEOUT_MILLIS))
+                                    .name(GitSpan.FS_PUSH)
+                                    .tap(Micrometer.observation(observationRegistry)),
+                            Git::close)
+                    // this subscribeOn on is required because Mono.using
+                    // is not deferring the execution of push and for that reason it runs on the
+                    // lettuce-nioEventLoop thread instead of boundedElastic
+                    .subscribeOn(scheduler);
+        });
     }
 
-    /** Clone the repo to the file path : container-volume/orgId/defaultAppId/repo/<Data>
+    /** Clone the repo to the file path : container-volume/workspaceId/defaultAppId/repo/<Data>
      *
-     *  @param repoSuffix combination of orgId, defaultId and repoName
+     *  @param repoSuffix combination of workspaceId, defaultId and repoName
      *  @param remoteUrl ssh url of the git repo(we support cloning via ssh url only with deploy key)
      *  @param privateKey generated by us and specific to the defaultApplication
      *  @param publicKey generated by us and specific to the defaultApplication
@@ -592,8 +601,7 @@ public class GitExecutorCEImpl implements GitExecutor {
                                     }
 
                                     // Remove modified changes from current branch so that checkout to other branches
-                                    // will be
-                                    // possible
+                                    // will be possible
                                     if (!status.isClean()) {
                                         return resetToLastCommit(git).map(ref -> {
                                             processStopwatch.stopAndLogTimeInMillis();
@@ -862,6 +870,47 @@ public class GitExecutorCEImpl implements GitExecutor {
                                                 .call()
                                                 .getMessages();
                                     }
+                                    processStopwatch.stopAndLogTimeInMillis();
+                                    return fetchMessages;
+                                })
+                                .onErrorResume(error -> {
+                                    log.error(error.getMessage());
+                                    return Mono.error(error);
+                                })
+                                .timeout(Duration.ofMillis(Constraint.TIMEOUT_MILLIS))
+                                .name(GitSpan.FS_FETCH_REMOTE)
+                                .tap(Micrometer.observation(observationRegistry)),
+                        Git::close)
+                .subscribeOn(scheduler);
+    }
+
+    @Override
+    public Mono<String> fetchRemote(
+            Path repoSuffix, String publicKey, String privateKey, boolean isRepoPath, String... branchNames) {
+        Stopwatch processStopwatch =
+                StopwatchHelpers.startStopwatch(repoSuffix, AnalyticsEvents.GIT_FETCH.getEventName());
+        Path repoPath = TRUE.equals(isRepoPath) ? repoSuffix : createRepoPath(repoSuffix);
+        return Mono.using(
+                        () -> Git.open(repoPath.toFile()),
+                        git -> Mono.fromCallable(() -> {
+                                    TransportConfigCallback config =
+                                            new SshTransportConfigCallback(privateKey, publicKey);
+                                    String fetchMessages;
+
+                                    List<RefSpec> refSpecs = new ArrayList<>();
+                                    for (String branchName : branchNames) {
+                                        RefSpec ref = new RefSpec(
+                                                "refs/heads/" + branchName + ":refs/remotes/origin/" + branchName);
+                                        refSpecs.add(ref);
+                                    }
+
+                                    fetchMessages = git.fetch()
+                                            .setRefSpecs(refSpecs.toArray(new RefSpec[0]))
+                                            .setRemoveDeletedRefs(true)
+                                            .setTransportConfigCallback(config)
+                                            .call()
+                                            .getMessages();
+
                                     processStopwatch.stopAndLogTimeInMillis();
                                     return fetchMessages;
                                 })

@@ -15,13 +15,14 @@ import { AnvilViewerCanvas } from "./viewer/canvas/AnvilViewerCanvas";
 const getAnvilSystemPropsEnhancer = (props: BaseWidgetProps) => {
   return {
     ...props,
-    allowWidgetInteraction:
-      props.renderMode === RenderModes.PAGE || props.isPreviewMode,
+    disableWidgetInteraction:
+      props.renderMode === RenderModes.CANVAS && !props.isPreviewMode,
   };
 };
 
 const getAnvilSystemWrapper = (renderMode: RenderModes) => {
   if (renderMode === RenderModes.CANVAS) return AnvilEditorWrapper;
+
   return AnvilViewerWrapper;
 };
 
@@ -34,6 +35,7 @@ const getAnvilSystemWrapper = (renderMode: RenderModes) => {
  */
 const getAnvilCanvasWrapper = (renderMode: RenderModes) => {
   if (renderMode === RenderModes.CANVAS) return AnvilEditorCanvas;
+
   return AnvilViewerCanvas;
 };
 

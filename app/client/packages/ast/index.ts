@@ -5,6 +5,7 @@ import type {
   IdentifierInfo,
   AssignmentExpressionData,
   CallExpressionData,
+  MemberCallExpressionData,
 } from "./src";
 import {
   isIdentifierNode,
@@ -34,7 +35,11 @@ import type {
   JSVarProperty,
   JSFunctionProperty,
 } from "./src/jsObject";
-import { parseJSObject, isJSFunctionProperty } from "./src/jsObject";
+import {
+  parseJSObject,
+  isJSFunctionProperty,
+  addPropertiesToJSObjectCode,
+} from "./src/jsObject";
 
 // action creator
 import {
@@ -85,6 +90,7 @@ export type {
   JSVarProperty,
   JSFunctionProperty,
   CallExpressionData,
+  MemberCallExpressionData,
 };
 
 export {
@@ -137,4 +143,5 @@ export {
   isFunctionPresent,
   PeekOverlayExpressionIdentifier,
   getMemberExpressionObjectFromProperty,
+  addPropertiesToJSObjectCode,
 };

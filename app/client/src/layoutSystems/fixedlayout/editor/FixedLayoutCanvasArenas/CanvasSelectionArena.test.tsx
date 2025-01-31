@@ -25,12 +25,15 @@ import * as widgetSelectionsActions from "actions/widgetSelectionActions";
 import { SelectionRequestType } from "sagas/WidgetSelectUtils";
 import Canvas from "pages/Editor/Canvas";
 
+const pageId = "0123456789abcdef00000000";
+
 describe("Canvas selection test cases", () => {
   jest
     .spyOn(dataTreeSelectors, "getWidgetEvalValues")
     .mockImplementation(mockGetWidgetEvalValues);
   jest
-    .spyOn(utilities, "computeMainContainerWidget")
+    .spyOn(utilities, "computeMainContainerWidget") // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .mockImplementation((widget) => widget as any);
   jest
     .spyOn(widgetRenderUtils, "createCanvasWidget")
@@ -50,7 +53,9 @@ describe("Canvas selection test cases", () => {
     jest.useRealTimers();
   });
 
-  it("Should select using canvas draw", () => {
+  it("Should select using canvas draw", async () => {
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const children: any = buildChildren([
       {
         type: "TABS_WIDGET",
@@ -69,14 +74,17 @@ describe("Canvas selection test cases", () => {
         widgetId: "switchWidgetId",
       },
     ]);
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dsl: any = widgetCanvasFactory.build({
       children,
     });
     const mockGetIsFetchingPage = jest.spyOn(utilities, "getIsFetchingPage");
+
     mockGetIsFetchingPage.mockImplementation(() => false);
     const component = render(
       <MemoryRouter
-        initialEntries={["/app/applicationSlug/pageSlug-page_id/edit"]}
+        initialEntries={[`/app/applicationSlug/pageSlug-${pageId}/edit`]}
       >
         <MockApplication>
           <GlobalHotKeys>
@@ -86,12 +94,20 @@ describe("Canvas selection test cases", () => {
       </MemoryRouter>,
       { initialState: store.getState(), sagasToRun: sagasToRunForTests },
     );
-    let selectionCanvas: any = component.queryByTestId(
+
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let selectionCanvas: any = await component.findByTestId(
       `canvas-selection-${MAIN_CONTAINER_WIDGET_ID}`,
+      undefined,
+      { timeout: 3000 },
     );
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const selectionDiv: any = component.queryByTestId(
       `div-selection-${MAIN_CONTAINER_WIDGET_ID}`,
     );
+
     expect(selectionCanvas.style.zIndex).toBe("");
     fireEvent.mouseDown(selectionDiv);
 
@@ -108,7 +124,9 @@ describe("Canvas selection test cases", () => {
     expect(selectionCanvas.style.zIndex).toBe("");
   });
 
-  it("Should select all elements using canvas from top to bottom", () => {
+  it("Should select all elements using canvas from top to bottom", async () => {
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const children: any = buildChildren([
       {
         type: "TABS_WIDGET",
@@ -129,14 +147,17 @@ describe("Canvas selection test cases", () => {
         widgetId: "switchWidgetId",
       },
     ]);
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dsl: any = widgetCanvasFactory.build({
       children,
     });
     const mockGetIsFetchingPage = jest.spyOn(utilities, "getIsFetchingPage");
+
     mockGetIsFetchingPage.mockImplementation(() => false);
     const component = render(
       <MemoryRouter
-        initialEntries={["/app/applicationSlug/pageSlug-page_id/edit"]}
+        initialEntries={[`/app/applicationSlug/pageSlug-${pageId}/edit`]}
       >
         <MockApplication>
           <GlobalHotKeys>
@@ -146,9 +167,14 @@ describe("Canvas selection test cases", () => {
       </MemoryRouter>,
       { initialState: store.getState(), sagasToRun: sagasToRunForTests },
     );
-    const selectionDiv: any = component.queryByTestId(
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const selectionDiv: any = await component.findByTestId(
       `div-selection-${MAIN_CONTAINER_WIDGET_ID}`,
+      undefined,
+      { timeout: 3000 },
     );
+
     fireEvent(
       selectionDiv,
       syntheticTestMouseEvent(
@@ -200,9 +226,11 @@ describe("Canvas selection test cases", () => {
     );
   });
 
-  it("Should allow draw to select using cmd + draw in Container component", () => {
+  it("Should allow draw to select using cmd + draw in Container component", async () => {
     const containerId = generateReactKey();
     const canvasId = generateReactKey();
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const children: any = buildChildren([
       { type: "CHECKBOX_WIDGET", parentId: canvasId },
       { type: "SWITCH_WIDGET", parentId: canvasId },
@@ -216,6 +244,8 @@ describe("Canvas selection test cases", () => {
         widgetId: canvasId,
       },
     ]);
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const containerChildren: any = buildChildren([
       {
         type: "CONTAINER_WIDGET",
@@ -225,15 +255,18 @@ describe("Canvas selection test cases", () => {
       },
       { type: "CHART_WIDGET", parentId: "0" },
     ]);
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dsl: any = widgetCanvasFactory.build({
       children: containerChildren,
     });
     const mockGetIsFetchingPage = jest.spyOn(utilities, "getIsFetchingPage");
+
     mockGetIsFetchingPage.mockImplementation(() => false);
 
     const component = render(
       <MemoryRouter
-        initialEntries={["/app/applicationSlug/pageSlug-page_id/edit"]}
+        initialEntries={[`/app/applicationSlug/pageSlug-${pageId}/edit`]}
       >
         <MockApplication>
           <GlobalHotKeys>
@@ -243,12 +276,19 @@ describe("Canvas selection test cases", () => {
       </MemoryRouter>,
       { initialState: store.getState(), sagasToRun: sagasToRunForTests },
     );
-    let selectionCanvas: any = component.queryByTestId(
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let selectionCanvas: any = await component.findByTestId(
       `canvas-selection-${canvasId}`,
+      undefined,
+      { timeout: 3000 },
     );
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const selectionDiv: any = component.queryByTestId(
       `div-selection-${canvasId}`,
     );
+
     expect(selectionCanvas.style.zIndex).toBe("");
     fireEvent.mouseDown(selectionDiv);
     // should not allow draw when cmd/ctrl is not pressed
@@ -267,9 +307,11 @@ describe("Canvas selection test cases", () => {
     expect(selectionCanvas.style.zIndex).toBe("");
   });
 
-  it("Should not allow draw to select using cmd + draw in drop disabled Canvas component", () => {
+  it("Should not allow draw to select using cmd + draw in drop disabled Canvas component", async () => {
     const containerId = generateReactKey();
     const canvasId = generateReactKey();
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const children: any = buildChildren([
       { type: "CHECKBOX_WIDGET", parentId: canvasId },
       { type: "SWITCH_WIDGET", parentId: canvasId },
@@ -284,6 +326,8 @@ describe("Canvas selection test cases", () => {
         dropDisabled: true,
       },
     ]);
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const containerChildren: any = buildChildren([
       {
         type: "CONTAINER_WIDGET",
@@ -293,6 +337,8 @@ describe("Canvas selection test cases", () => {
       },
       { type: "CHART_WIDGET", parentId: "0" },
     ]);
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dsl: any = widgetCanvasFactory.build({
       children: containerChildren,
     });
@@ -302,13 +348,31 @@ describe("Canvas selection test cases", () => {
         <Canvas canvasWidth={dsl.rightColumn} widgetsStructure={dsl} />
       </MockPageDSL>,
     );
-    const selectionCanvas: any = component.queryByTestId(`canvas-${canvasId}`);
+
+    let selectionCanvas;
+
+    // TODO: Fix this the next time the file is edited
+    try {
+      // We actually want to assert the canvas component could not be found,
+      // if the canvas component could not be found after timeout findByTestId will throw an error
+      // In that case we set the component to be null
+      selectionCanvas = await component.findByTestId(
+        `canvas-${canvasId}`,
+        undefined,
+        { timeout: 3000 },
+      );
+    } catch (e) {
+      selectionCanvas = null;
+    }
+
     expect(selectionCanvas).toBeNull();
   });
 
-  it("Should select all elements inside a CONTAINER using draw on canvas from top to bottom", () => {
+  it("Should select all elements inside a CONTAINER using draw on canvas from top to bottom", async () => {
     const containerId = "containerWidget";
     const canvasId = "canvasWidget";
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const children: any = buildChildren([
       {
         type: "CHECKBOX_WIDGET",
@@ -343,6 +407,8 @@ describe("Canvas selection test cases", () => {
         widgetId: canvasId,
       },
     ]);
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const containerChildren: any = buildChildren([
       {
         type: "CONTAINER_WIDGET",
@@ -356,15 +422,18 @@ describe("Canvas selection test cases", () => {
       },
       { type: "CHART_WIDGET", parentId: "0", widgetId: "chartWidget" },
     ]);
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dsl: any = widgetCanvasFactory.build({
       children: containerChildren,
     });
     const mockGetIsFetchingPage = jest.spyOn(utilities, "getIsFetchingPage");
+
     mockGetIsFetchingPage.mockImplementation(() => false);
 
     const component = render(
       <MemoryRouter
-        initialEntries={["/app/applicationSlug/pageSlug-page_id/edit"]}
+        initialEntries={[`/app/applicationSlug/pageSlug-${pageId}/edit`]}
       >
         <MockApplication>
           <GlobalHotKeys>
@@ -375,9 +444,14 @@ describe("Canvas selection test cases", () => {
       { initialState: store.getState(), sagasToRun: sagasToRunForTests },
     );
 
-    const selectionDiv: any = component.queryByTestId(
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const selectionDiv: any = await component.findByTestId(
       `div-selection-${canvasId}`,
+      undefined,
+      { timeout: 3000 },
     );
+
     fireEvent(
       selectionDiv,
       syntheticTestMouseEvent(
@@ -427,8 +501,10 @@ describe("Canvas selection test cases", () => {
     );
   });
 
-  it("Draw to select from outside of canvas(editor) ", () => {
+  it("Draw to select from outside of canvas(editor) ", async () => {
     const mockGetIsFetchingPage = jest.spyOn(utilities, "getIsFetchingPage");
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const children: any = buildChildren([
       {
         type: "TABS_WIDGET",
@@ -449,14 +525,17 @@ describe("Canvas selection test cases", () => {
         widgetId: "switchWidgetId",
       },
     ]);
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dsl: any = widgetCanvasFactory.build({
       children,
     });
+
     mockGetIsFetchingPage.mockImplementation(() => false);
 
     const component = render(
       <MemoryRouter
-        initialEntries={["/app/applicationSlug/pageSlug-page_id/edit"]}
+        initialEntries={[`/app/applicationSlug/pageSlug-${pageId}/edit`]}
       >
         <MockApplication>
           <GlobalHotKeys>
@@ -466,13 +545,24 @@ describe("Canvas selection test cases", () => {
       </MemoryRouter>,
       { initialState: store.getState(), sagasToRun: sagasToRunForTests },
     );
-    const widgetEditor: any = component.queryByTestId("t--widgets-editor");
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const widgetEditor: any = await component.findByTestId(
+      "t--widgets-editor",
+      undefined,
+      { timeout: 3000 },
+    );
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let selectionCanvas: any = component.queryByTestId(
       `canvas-selection-${MAIN_CONTAINER_WIDGET_ID}`,
     );
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const selectionDiv: any = component.queryByTestId(
       `div-selection-${MAIN_CONTAINER_WIDGET_ID}`,
     );
+
     expect(selectionCanvas.style.zIndex).toBe("");
     act(() => {
       fireEvent.dragStart(widgetEditor);

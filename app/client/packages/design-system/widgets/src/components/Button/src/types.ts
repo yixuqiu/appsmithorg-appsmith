@@ -4,14 +4,15 @@ import type { IconProps } from "../../Icon";
 import type { COLORS, SIZES } from "../../../shared";
 
 export const BUTTON_VARIANTS = {
-  filled: "filled",
-  outlined: "outlined",
-  ghost: "ghost",
+  filled: "Filled",
+  outlined: "Outlined",
+  subtle: "Subtle",
+  ghost: "Ghost",
 } as const;
 
 export const BUTTON_ICON_POSITIONS = {
-  start: "start",
-  end: "end",
+  start: "Start",
+  end: "End",
 } as const;
 
 export interface ButtonProps extends HeadlessButtonProps {
@@ -39,5 +40,9 @@ export interface ButtonProps extends HeadlessButtonProps {
   /** Size of the button
    * @default medium
    */
-  size?: Omit<keyof typeof SIZES, "large">;
+  size?: Exclude<keyof typeof SIZES, "large">;
+  /** Indicates if the button should be disabled when the form is invalid */
+  disableOnInvalidForm?: boolean;
+  /** Indicates if the button should reset the form when clicked */
+  resetFormOnClick?: boolean;
 }

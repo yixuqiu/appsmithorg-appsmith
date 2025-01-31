@@ -5,10 +5,12 @@ import { ObjectsRegistry } from "../../../support/Objects/Registry";
 
 describe(
   "Redshift datasource test cases",
-  { tags: ["@tag.Datasource", "@tag.Sanity"] },
+  {
+    tags: ["@tag.Datasource", "@tag.Sanity", "@tag.Git", "@tag.AccessControl"],
+  },
   function () {
     beforeEach(() => {
-      cy.startRoutesForDatasource();
+      dataSources.StartDataSourceRoutes();
     });
 
     it("1. Create, test, save then delete a Redshift datasource", function () {

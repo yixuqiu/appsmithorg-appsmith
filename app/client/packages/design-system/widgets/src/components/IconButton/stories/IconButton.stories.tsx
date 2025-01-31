@@ -6,14 +6,16 @@ import {
   SIZES,
   BUTTON_VARIANTS,
   COLORS,
-} from "@design-system/widgets";
+  type IconButtonProps,
+} from "@appsmith/wds";
+import { objectKeys } from "@appsmith/utils";
 
 /**
  * Icon Button is a button component that only contains an icon.
  */
 const meta: Meta<typeof IconButton> = {
   component: IconButton,
-  title: "Design-system/Widgets/IconButton",
+  title: "WDS/Widgets/Icon Button",
 };
 
 export default meta;
@@ -31,7 +33,7 @@ export const Main: Story = {
 export const Variants: Story = {
   render: () => (
     <Flex gap="spacing-4" wrap="wrap">
-      {Object.values(BUTTON_VARIANTS).map((variant) => (
+      {objectKeys(BUTTON_VARIANTS).map((variant) => (
         <IconButton icon="star" key={`${variant}`} variant={variant} />
       ))}
     </Flex>
@@ -44,7 +46,7 @@ export const Variants: Story = {
 export const Semantic: Story = {
   render: () => (
     <Flex gap="1rem" wrap="wrap">
-      {Object.values(BUTTON_VARIANTS).map((variant) =>
+      {objectKeys(BUTTON_VARIANTS).map((variant) =>
         Object.values(COLORS).map((color) => (
           <IconButton
             color={color}
@@ -64,8 +66,11 @@ export const Semantic: Story = {
 export const Sizes: Story = {
   render: () => (
     <Flex alignItems="start" gap="spacing-2">
-      {Object.keys(SIZES)
-        .filter((size) => !["large"].includes(size))
+      {objectKeys(SIZES)
+        .filter(
+          (size): size is NonNullable<IconButtonProps["size"]> =>
+            !["xSmall", "large"].includes(size),
+        )
         .map((size) => (
           <IconButton icon="star" key={size} size={size} />
         ))}

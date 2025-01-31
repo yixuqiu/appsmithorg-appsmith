@@ -1,17 +1,16 @@
+import type { WidgetCallout } from "WidgetProvider/constants";
+import WidgetFactory from "WidgetProvider/factory";
 import type {
   PropertyPaneConfig,
   PropertyPaneControlConfig,
   PropertyPaneSectionConfig,
 } from "constants/PropertyControlConstants";
+import { Callout } from "@appsmith/ads";
 import { debounce } from "lodash";
-import { useCallback, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { layoutSystemBasedPropertyFilter } from "sagas/WidgetEnhancementHelpers";
-import type { WidgetProps } from "widgets/BaseWidget";
-import { Callout } from "design-system";
-import React from "react";
-import WidgetFactory from "WidgetProvider/factory";
-import type { WidgetCallout } from "WidgetProvider/constants";
 import { isDynamicValue } from "utils/DynamicBindingUtils";
+import type { WidgetProps } from "widgets/BaseWidget";
 
 export function useSearchText(initialVal: string) {
   const [searchText, setSearchText] = useState(initialVal);
@@ -34,13 +33,17 @@ export function useSearchText(initialVal: string) {
 
 export function evaluateHiddenProperty(
   config: readonly PropertyPaneConfig[],
+  // TODO: Fix this the next time the file is edited
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   widgetProps: any,
   shouldHidePropertyFn?: (propertyName: string) => boolean | undefined,
 ) {
   const finalConfig: PropertyPaneConfig[] = [];
+
   for (const conf of config) {
     const sectionConfig = conf as PropertyPaneSectionConfig;
     const controlConfig = conf as PropertyPaneControlConfig;
+
     if (sectionConfig.sectionName) {
       const isSectionHidden =
         sectionConfig.hidden &&
@@ -48,12 +51,14 @@ export function evaluateHiddenProperty(
           widgetProps,
           sectionConfig.propertySectionPath || "",
         );
+
       if (!isSectionHidden) {
         const children = evaluateHiddenProperty(
           sectionConfig.children,
           widgetProps,
           shouldHidePropertyFn,
         );
+
         if (children.length > 0) {
           finalConfig.push({
             ...sectionConfig,
@@ -72,11 +77,13 @@ export function evaluateHiddenProperty(
           controlConfig.hidden(widgetProps, controlConfig.propertyName)) ||
         (shouldHidePropertyFn &&
           shouldHidePropertyFn(controlConfig.propertyName));
+
       if (!isControlHidden) {
         finalConfig.push(conf);
       }
     }
   }
+
   return finalConfig;
 }
 
@@ -86,6 +93,7 @@ export function updateConfigPaths(
 ) {
   return config.map((_childConfig) => {
     const childConfig = Object.assign({}, _childConfig);
+
     // TODO(abhinav): Figure out a better way to differentiate between section and control
     if (
       (childConfig as PropertyPaneSectionConfig).sectionName &&
@@ -98,14 +106,17 @@ export function updateConfigPaths(
         (childConfig as PropertyPaneControlConfig).propertyName
       }`;
     }
+
     return childConfig;
   });
 }
 
 export function renderWidgetCallouts(props: WidgetProps): JSX.Element[] {
   const { getEditorCallouts } = WidgetFactory.getWidgetMethods(props.type);
+
   if (getEditorCallouts) {
     const callouts: WidgetCallout[] = getEditorCallouts(props);
+
     return callouts.map((callout, index) => {
       const links = callout.links?.map((link) => {
         return {
@@ -113,6 +124,7 @@ export function renderWidgetCallouts(props: WidgetProps): JSX.Element[] {
           to: link.url,
         };
       });
+
       return (
         <Callout
           data-testid="t--deprecation-warning"
@@ -138,6 +150,8 @@ export function renderWidgetCallouts(props: WidgetProps): JSX.Element[] {
  */
 export function savePropertyInSessionStorageIfRequired(props: {
   isReusable: boolean;
+  // TODO: Fix this the next time the file is edited
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   widgetProperties: any;
   propertyName: string;
   propertyValue: string;

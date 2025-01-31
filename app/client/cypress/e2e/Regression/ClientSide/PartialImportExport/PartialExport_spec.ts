@@ -9,15 +9,11 @@ const fixtureName = "PartialImportExportSampleApp.json";
 
 describe(
   "Partial export functionality",
-  { tags: ["@tag.ImportExport"] },
+  { tags: ["@tag.ImportExport", "@tag.Git"] },
   () => {
     before(() => {
       agHelper.GenerateUUID();
       homePage.ImportApp(`PartialImportExport/${fixtureName}`);
-
-      featureFlagIntercept({
-        release_show_partial_import_export_enabled: true,
-      });
     });
 
     beforeEach(() => {

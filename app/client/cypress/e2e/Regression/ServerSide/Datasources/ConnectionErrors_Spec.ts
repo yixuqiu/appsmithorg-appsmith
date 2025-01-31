@@ -8,7 +8,7 @@ import {
 
 describe(
   "Validate Empty DS error messages",
-  { tags: ["@tag.Datasource"] },
+  { tags: ["@tag.Datasource", "@tag.Git", "@tag.AccessControl"] },
   () => {
     let dataSourceName: string;
 
@@ -22,7 +22,7 @@ describe(
       cy.get("@guid").then((uid) => {
         dataSources.CreatePlugIn("PostgreSQL");
         dataSourceName = "PostgreSQL" + " " + uid;
-        agHelper.RenameWithInPane(dataSourceName, false);
+        agHelper.RenameDatasource(dataSourceName);
 
         dataSources.TestDatasource(false);
         agHelper.ValidateToastMessage("Missing username for authentication.");
@@ -36,6 +36,12 @@ describe(
           dataManager.dsValues[dataManager.defaultEnviorment].postgres_host,
         );
         agHelper.ClearNType(
+          dataSources._port,
+          dataManager.dsValues[
+            dataManager.defaultEnviorment
+          ].postgres_port.toString(),
+        );
+        agHelper.ClearNType(
           dataSources._databaseName,
           dataManager.dsValues[dataManager.defaultEnviorment]
             .postgres_databaseName,
@@ -45,10 +51,7 @@ describe(
           dataManager.dsValues[dataManager.defaultEnviorment].postgres_username,
         );
         dataSources.TestDatasource(false);
-        agHelper.ValidateToastMessage(
-          "An exception occurred while creating connection pool. One or more arguments in the datasource configuration may be invalid.",
-        );
-        agHelper.ValidateToastMessage("Failed to initialize pool:");
+        agHelper.ValidateToastMessage("Missing password for authentication.");
         agHelper.GetNClick(locators._visibleTextSpan("Read only"));
         propPane.AssertPropertiesDropDownValues("SSL mode", [
           "Default",
@@ -78,7 +81,7 @@ describe(
       cy.get("@guid").then((uid) => {
         dataSources.CreatePlugIn("MySQL");
         dataSourceName = "MySQL" + " " + uid;
-        agHelper.RenameWithInPane(dataSourceName, false);
+        agHelper.RenameDatasource(dataSourceName);
 
         dataSources.TestDatasource(false);
         agHelper.ValidateToastMessage("Host value cannot be empty");
@@ -102,9 +105,7 @@ describe(
           dataManager.dsValues[dataManager.defaultEnviorment].mysql_username,
         );
         dataSources.TestDatasource(false);
-        agHelper.ValidateToastMessage(
-          "Access denied for user 'root'@'172.17.0.1'",
-        );
+        agHelper.ValidateToastMessage("Access denied for user");
         propPane.AssertPropertiesDropDownValues("SSL mode", [
           "Default",
           "Required",
@@ -132,7 +133,7 @@ describe(
       cy.get("@guid").then((uid) => {
         dataSources.CreatePlugIn("MongoDB");
         dataSourceName = "MongoDB" + " " + uid;
-        agHelper.RenameWithInPane(dataSourceName, false);
+        agHelper.RenameDatasource(dataSourceName);
 
         dataSources.TestDatasource(false);
         agHelper.ValidateToastMessage(
@@ -233,7 +234,7 @@ describe(
       cy.get("@guid").then((uid) => {
         dataSources.CreatePlugIn("Redis");
         dataSourceName = "Redis" + " " + uid;
-        agHelper.RenameWithInPane(dataSourceName, false);
+        agHelper.RenameDatasource(dataSourceName);
 
         dataSources.TestDatasource(false);
         agHelper.ValidateToastMessage(
@@ -254,7 +255,7 @@ describe(
       cy.get("@guid").then((uid) => {
         dataSources.CreatePlugIn("S3");
         dataSourceName = "S3" + " " + uid;
-        agHelper.RenameWithInPane(dataSourceName, false);
+        agHelper.RenameDatasource(dataSourceName);
 
         dataSources.TestDatasource(false);
         agHelper.ValidateToastMessage(

@@ -16,17 +16,11 @@ let datasourceName;
 
 describe(
   "Entity explorer tests related to copy query",
-  { tags: ["@tag.IDE"] },
+  { tags: ["@tag.IDE", "@tag.PropertyPane"] },
   function () {
     beforeEach(() => {
-      cy.startRoutesForDatasource();
+      dataSources.StartDataSourceRoutes();
     });
-
-    // afterEach(function() {
-    //   if (this.currentTest.state === "failed") {
-    //     Cypress.runner.stop();
-    //   }
-    // });
 
     it("1. Create a query with dataSource in explorer, Create new Page", function () {
       cy.Createpage(pageid);
@@ -47,7 +41,7 @@ describe(
       dataSources.EnterQuery("select * from users");
 
       cy.EvaluateCurrentValue("select * from users");
-      cy.get(".t--action-name-edit-field").click({ force: true });
+
       cy.get("@saveDatasource").then((httpResponse) => {
         datasourceName = httpResponse.response.body.data.name;
         PageLeftPane.switchSegment(PagePaneSegment.Queries);

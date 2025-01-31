@@ -1,8 +1,8 @@
-import type { Workspace } from "@appsmith/constants/workspaceConstants";
-import type { AppState } from "@appsmith/reducers";
-import { getDefaultPlugins } from "@appsmith/selectors/entitiesSelector";
-import { getFetchedWorkspaces } from "@appsmith/selectors/workspaceSelectors";
-import { hasCreateNewAppPermission } from "@appsmith/utils/permissionHelpers";
+import type { Workspace } from "ee/constants/workspaceConstants";
+import type { AppState } from "ee/reducers";
+import { getDefaultPlugins } from "ee/selectors/entitiesSelector";
+import { getFetchedWorkspaces } from "ee/selectors/workspaceSelectors";
+import { hasCreateNewAppPermission } from "ee/utils/permissionHelpers";
 import type { FilterKeys, Template } from "api/TemplatesApi";
 import {
   BUILDING_BLOCK_EXPLORER_TYPE,
@@ -30,10 +30,6 @@ export const isImportingTemplateSelector = (state: AppState) =>
   state.ui.templates.isImportingTemplate;
 export const isImportingTemplateToAppSelector = (state: AppState) =>
   state.ui.templates.isImportingTemplateToApp;
-export const isImportingStarterBuildingBlockToAppSelector = (state: AppState) =>
-  state.ui.templates.isImportingStarterBuildingBlockToApp;
-export const starterBuildingBlockDatasourcePromptSelector = (state: AppState) =>
-  state.ui.templates.starterBuildingBlockDatasourcePrompt;
 export const currentForkingBuildingBlockName = (state: AppState) =>
   state.ui.templates.currentForkingTemplateInfo.buildingBlock.name;
 export const buildingBlocksSourcePageIdSelector = (state: AppState) =>
@@ -159,6 +155,7 @@ export const getSearchedTemplateList = createSelector(
     }
 
     const fuzzy = new Fuse(templates, fuzzySearchOptions);
+
     return fuzzy.search(query);
   },
 );
@@ -169,6 +166,7 @@ export const templatesDatasourceFiltersSelector = createSelector(
   getDefaultPlugins,
   (templates, plugins) => {
     const datasourceFilters: Filter[] = [];
+
     templates.map((template) => {
       template.datasources.map((pluginIdentifier) => {
         if (
@@ -226,6 +224,7 @@ export const getFilterListSelector = createSelector(
             if (filter.value) {
               return filter.value === templateValue;
             }
+
             return filter.label === templateValue;
           })
         ) {
@@ -233,8 +232,10 @@ export const getFilterListSelector = createSelector(
             if (datum.value) {
               return datum.value === templateValue;
             }
+
             return datum.label === templateValue;
           });
+
           filteredData && filters[key].push(filteredData);
         }
       });
@@ -243,6 +244,7 @@ export const getFilterListSelector = createSelector(
     templates.forEach((template) => {
       filterFilters(FUNCTIONS_FILTER, allFunctions, template);
     });
+
     return filters;
   },
 );

@@ -59,7 +59,6 @@ abstract class BaseLayoutComponent extends PureComponent<
       layoutIndex: this.props.layoutIndex,
       layoutType: this.props.layoutType,
       parentDropTarget: this.props.parentDropTarget,
-      renderMode: this.props.renderMode,
       ...(this.props.layoutStyle || {}),
     };
   }
@@ -78,6 +77,7 @@ abstract class BaseLayoutComponent extends PureComponent<
     if (props.allowedWidgetTypes && props.allowedWidgetTypes.length) {
       return props.allowedWidgetTypes;
     }
+
     return [];
   }
 
@@ -92,6 +92,7 @@ abstract class BaseLayoutComponent extends PureComponent<
 
   renderChildLayouts(): React.ReactNode {
     const { canvasId, layout, parentDropTarget, renderMode } = this.props;
+
     return renderLayouts(
       layout as LayoutProps[],
       canvasId,
@@ -109,7 +110,9 @@ abstract class BaseLayoutComponent extends PureComponent<
   renderDraggingArena(): React.ReactNode | null {
     const { canvasId, isDropTarget, layoutId, layoutType, parentDropTarget } =
       this.props;
+
     if (!isDropTarget) return null;
+
     return (
       <AnvilDraggingArena
         allowedWidgetTypes={this.props.allowedWidgetTypes || []}

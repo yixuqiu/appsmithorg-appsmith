@@ -9,7 +9,7 @@ import { REPO, CURRENT_REPO } from "../../../../fixtures/REPO";
 
 describe(
   "Leave workspace test spec",
-  { tags: ["@tag.Workspace"] },
+  { tags: ["@tag.Workspace", "@tag.AccessControl"] },
   function () {
     let newWorkspaceName;
 
@@ -40,10 +40,9 @@ describe(
       );
       homePage.LogOutviaAPI();
 
-      homePage.LogintoApp(
+      cy.LoginFromAPI(
         Cypress.env("TESTUSERNAME1"),
         Cypress.env("TESTPASSWORD1"),
-        "App Viewer",
       );
       agHelper.AssertContains(newWorkspaceName);
       homePage.SelectWorkspace(newWorkspaceName, false);

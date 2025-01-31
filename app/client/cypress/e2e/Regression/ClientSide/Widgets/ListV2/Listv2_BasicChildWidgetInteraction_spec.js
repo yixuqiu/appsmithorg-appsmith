@@ -51,7 +51,7 @@ function checkSelectedRadioValue(selector, value) {
 
 describe(
   "List widget v2 - Basic Child Widget Interaction",
-  { tags: ["@tag.Widget", "@tag.List"] },
+  { tags: ["@tag.Widget", "@tag.List", "@tag.Sanity", "@tag.Binding"] },
   () => {
     before(() => {
       _.agHelper.AddDsl("Listv2/emptyList");
@@ -64,7 +64,7 @@ describe(
         x: 250,
         y: 50,
       });
-      cy.assertPageSave();
+      _.agHelper.AssertAutoSave();
 
       // Verify drop
       cy.get(publishLocators.inputWidget).should("exist");

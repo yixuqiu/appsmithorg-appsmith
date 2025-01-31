@@ -13,13 +13,13 @@ const datasourceHomeLocators = require("../../../../locators/apiWidgetslocator.j
 const datasourceLocators = require("../../../../locators/DatasourcesEditor.json");
 import * as _ from "../../../../support/Objects/ObjectsCore";
 
-describe("GlobalSearch", function () {
+describe("GlobalSearch", { tags: ["@tag.Sanity"] }, function () {
   before(() => {
     _.agHelper.AddDsl("MultipleWidgetDsl");
   });
 
   beforeEach(() => {
-    cy.startRoutesForDatasource();
+    _.dataSources.StartDataSourceRoutes();
   });
 
   it("1. Shows And Hides Using Keyboard Shortcuts", () => {
@@ -161,9 +161,7 @@ describe("GlobalSearch", function () {
       .first()
       .click();
     cy.wait("@createNewApi");
-    cy.get(datasourceHomeLocators.apiTxt)
-      .invoke("val")
-      .then((title) => expect(title).includes("Api"));
+    _.agHelper.GetObjectName().then((title) => expect(title).includes("Api"));
   });
 
   // since now datasource will only be saved once user clicks on save button explicitly,

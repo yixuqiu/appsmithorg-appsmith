@@ -5,10 +5,8 @@ import com.appsmith.server.dtos.RecentlyUsedEntityDTO;
 import com.appsmith.server.projections.UserDataProfilePhotoProjection;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -21,7 +19,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@ExtendWith(SpringExtension.class)
 @SpringBootTest
 @Slf4j
 public class CustomUserDataRepositoryTest {
@@ -156,6 +153,38 @@ public class CustomUserDataRepositoryTest {
 
                     UserDataProfilePhotoProjection secondUserData = userDataMap.get(secondId);
                     assertThat(secondUserData.getProfilePhotoAssetId()).isNull();
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    public void fetchMostRecentlyUsedWorkspaceId_withAndWithoutRecentlyUsedIds_success() {
+        String randomId = UUID.randomUUID().toString();
+        String firstId = "first_" + randomId, photoId = "photo_" + randomId;
+
+        UserData userData = new UserData();
+        userData.setUserId(firstId);
+        userData.setProfilePhotoAssetId(photoId);
+
+        // Assert when no recently used entity ids are present
+        userData = userDataRepository.save(userData).block();
+        StepVerifier.create(userDataRepository.fetchMostRecentlyUsedWorkspaceId(firstId))
+                .assertNext(workspaceId -> {
+                    assertThat(workspaceId).isEmpty();
+                })
+                .verifyComplete();
+
+        // Recently used entity ids are present
+        RecentlyUsedEntityDTO recentlyUsedEntityDTO = new RecentlyUsedEntityDTO();
+        recentlyUsedEntityDTO.setWorkspaceId("123");
+        recentlyUsedEntityDTO.setApplicationIds(List.of("456"));
+
+        assert userData != null : "userData can't be null";
+        userData.setRecentlyUsedEntityIds(List.of(recentlyUsedEntityDTO));
+        userDataRepository.save(userData).block();
+        StepVerifier.create(userDataRepository.fetchMostRecentlyUsedWorkspaceId(firstId))
+                .assertNext(workspaceId -> {
+                    assertThat(workspaceId).isEqualTo("123");
                 })
                 .verifyComplete();
     }

@@ -1,38 +1,54 @@
-/**
- **** Structural Components ****
- * Components that are part of the main structure of the IDE experience
- **/
+/* ====================================================
+    **** Structural Components ****
+    Components that are part of the main structure of the IDE experience
+====================================================**/
 
 /**
- * The IDEHeader gets exported with 3 layout subsections.
- * IDEHeader.Left, IDEHeader.Center, IDEHeader.Right
- * These are composable components that you can use to spread the content of the header
- * It is possible to use the IDE Header without using these subsections
+ * The IDEToolbar gets exported with 2 layout subsections.
+ * IDEToolbar.Left and IDEToolbar.Right
+ * These are composable components that you can use to spread the content of the toolbar
+ * It is possible to use the Toolbar without using these subsections
  */
-export { default as IDEHeader } from "./Structure/Header";
+export { default as IDEToolbar } from "./Structure/Toolbar";
+
+/* ====================================================
+    **** UI Components ****
+    Components that are smaller UI abstractions for easy use and standardisation within the IDE
+=======================================================**/
 
 /**
- **** UI Components ****
- * Components that are smaller UI abstractions for easy use and standardisation within the IDE
- **/
+ * IDEBottomView is a versatile view meant to be at the bottom of the screen.
+ * It is resizable and can be hidden or collapsed based on the behavior configured
+ * The view is designed for showing tabs, but this component does not assume this can
+ * accept any view to be rendered
+ */
+export { default as IDEBottomView } from "./Components/BottomView";
 
 /**
- * IDEHeaderTitle is a small text styled wrapper that is suitable to be used inside IDEHeader
+ * IDESidePaneWrapper is used as a wrapper for side panes, which provides a border and optional padding
+ * and enforces 100% width and height to the parent.
  */
-export { default as IDEHeaderTitle } from "./Components/HeaderTitle";
+export { default as IDESidePaneWrapper } from "./Components/SidePaneWrapper";
+
 /**
- * IDEHeaderEditorSwitcher can be used for trigger component to show a drop down for pages, modules
- * or any list of elements in the header. Eg. Pages / Page 1
+ * ToolbarSettingsPopover is a popover attached to a settings toggle button in the toolbar
  */
-export { default as IDEHeaderEditorSwitcher } from "./Components/HeaderEditorSwitcher";
+export { ToolbarSettingsPopover } from "./Components/ToolbarSettingsPopover";
+
 /**
- * The IDEHeaderDropdown gets exported with 2 layout subsections.
- * IDEHeaderDropdown.Header, IDEHeaderDropdown.Body
- * These are composable components that you can use to spread the content of the header
- * It is possible to use the IDE Header without using these subsections
+ * EditableName is a component that allows the user to edit the name of an entity
+ * It is used in the IDE for renaming pages, actions, queries, etc.
  */
-export { default as IDEHeaderDropdown } from "./Components/HeaderDropdown";
-/**
- **** Interfaces ****
- * Common types that are used by the different components of the IDE
- **/
+export {
+  EditableName,
+  RenameMenuItem,
+  useIsRenaming,
+  useValidateEntityName,
+} from "./Components/EditableName";
+
+/* ====================================================
+    **** Interfaces ****
+    Common types that are used by the different components of the IDE
+=======================================================**/
+
+export { ViewHideBehaviour, ViewDisplayMode } from "./Interfaces/View";

@@ -6,11 +6,12 @@ import {X509Certificate} from "crypto"
 // The custom domain is expected to only have the domain. So if it has a protocol, we ignore the whole value.
 // This was the effective behaviour before Caddy.
 const CUSTOM_DOMAIN = (process.env.APPSMITH_CUSTOM_DOMAIN || "").replace(/^https?:\/\/.+$/, "")
-
-// Rate limit, numeric value defining the requests-per-second allowed.
-const RATE_LIMIT = parseInt(process.env._APPSMITH_RATE_LIMIT || 100, 10)
-
 const CaddyfilePath = process.env.TMP + "/Caddyfile"
+const AppsmithCaddy = process.env._APPSMITH_CADDY
+
+// Rate limit environment.
+const isRateLimitingEnabled = process.env.APPSMITH_RATE_LIMIT !== "disabled"
+const RATE_LIMIT = parseInt(process.env.APPSMITH_RATE_LIMIT || 100, 10)
 
 let certLocation = null
 if (CUSTOM_DOMAIN !== "") {
@@ -42,13 +43,14 @@ const parts = []
 parts.push(`
 {
   debug
-  admin 127.0.0.1:2019
+  admin 0.0.0.0:2019
   persist_config off
   acme_ca_root /etc/ssl/certs/ca-certificates.crt
   servers {
     trusted_proxies static 0.0.0.0/0
+    metrics
   }
-  order rate_limit before basicauth
+  ${isRateLimitingEnabled ? "order rate_limit before basicauth" : ""}
 }
 
 (file_server) {
@@ -70,7 +72,15 @@ parts.push(`
   log {
     output stdout
   }
-  skip_log /api/v1/health
+
+  # skip logs for health check
+  log_skip /api/v1/health
+
+  # skip logs for sourcemap files
+  @source-map-files {
+    path_regexp ^.*\.(js|css)\.map$
+  }
+  log_skip @source-map-files
 
   # The internal request ID header should never be accepted from an incoming request.
   request_header -X-Appsmith-Request-Id
@@ -90,6 +100,10 @@ parts.push(`
     X-Appsmith-Request-Id {http.request.uuid}
   }
 
+  header /static/* {
+    Cache-Control "public, max-age=31536000, immutable"
+  }
+
   request_body {
     max_size ${process.env.APPSMITH_CODEC_SIZE || 150}MB
   }
@@ -104,7 +118,6 @@ parts.push(`
   @file file
   handle @file {
     import file_server
-    skip_log
   }
 
   handle /static/* {
@@ -131,22 +144,30 @@ parts.push(`
     import reverse_proxy 9001
   }
 
-  rate_limit {
+  ${isRateLimitingEnabled ? `rate_limit {
     zone dynamic_zone {
-      key {http.request.remote_ip}
+      # This key is designed to work irrespective of any load balancers running on the Appsmith container.
+      # We use "+" as the separator here since we don't expect it in any of the placeholder values here, and has no
+      # significance in header value syntax.
+      key {header.Forwarded}+{header.X-Forwarded-For}+{remote_host}
       events ${RATE_LIMIT}
       window 1s
     }
-  }
+  }`: ""}
 
   handle_errors {
     respond "{err.status_code} {err.status_text}" {err.status_code}
-    header -Server
+    header {
+      # Remove the Server header from the response.
+      -Server
+      # Remove Cache-Control header from the response.
+      -Cache-Control
+    }
   }
 }
 
 # We bind to http on 80, so that localhost requests don't get redirected to https.
-:80 {
+:${process.env.PORT || 80} {
   import all-config
 }
 `)
@@ -182,15 +203,15 @@ if (CUSTOM_DOMAIN !== "") {
 }
 
 if (!process.argv.includes("--no-finalize-index-html")) {
-  finalizeIndexHtml()
+  finalizeHtmlFiles()
 }
 
 fs.mkdirSync(dirname(CaddyfilePath), { recursive: true })
 fs.writeFileSync(CaddyfilePath, parts.join("\n"))
-spawnSync("/opt/caddy/caddy", ["fmt", "--overwrite", CaddyfilePath])
-spawnSync("/opt/caddy/caddy", ["reload", "--config", CaddyfilePath])
+spawnSync(AppsmithCaddy, ["fmt", "--overwrite", CaddyfilePath])
+spawnSync(AppsmithCaddy, ["reload", "--config", CaddyfilePath])
 
-function finalizeIndexHtml() {
+function finalizeHtmlFiles() {
   let info = null;
   try {
     info = JSON.parse(fs.readFileSync("/opt/appsmith/info.json", "utf8"))
@@ -203,14 +224,17 @@ function finalizeIndexHtml() {
     APPSMITH_VERSION_ID: info?.version ?? "",
     APPSMITH_VERSION_SHA: info?.commitSha ?? "",
     APPSMITH_VERSION_RELEASE_DATE: info?.imageBuiltAt ?? "",
+    APPSMITH_HOSTNAME: process.env.HOSTNAME ?? "appsmith-0"
   }
 
-  const content = fs.readFileSync("/opt/appsmith/editor/index.html", "utf8").replaceAll(
-    /\{\{env\s+"(APPSMITH_[A-Z0-9_]+)"}}/g,
-    (_, name) => (process.env[name] || extraEnv[name] || "")
-  )
+  for (const file of ["index.html", "404.html"]) {
+    const content = fs.readFileSync("/opt/appsmith/editor/" + file, "utf8").replaceAll(
+      /\{\{env\s+"(APPSMITH_[A-Z0-9_]+)"}}/g,
+      (_, name) => (process.env[name] || extraEnv[name] || "")
+    )
 
-  fs.writeFileSync(process.env.WWW_PATH + "/index.html", content)
+    fs.writeFileSync(process.env.WWW_PATH + "/" + file, content)
+  }
 }
 
 function isCertExpired(path) {
