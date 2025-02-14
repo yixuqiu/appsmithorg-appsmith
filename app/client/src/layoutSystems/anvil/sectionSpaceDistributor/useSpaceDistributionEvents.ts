@@ -1,7 +1,6 @@
 import { getAnvilWidgetDOMId } from "layoutSystems/common/utils/LayoutElementPositionsObserver/utils";
 import { useCallback, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { AnvilReduxActionTypes } from "../integrations/actions/actionTypes";
 import {
   getMouseSpeedTrackingCallback,
   getPropertyPaneZoneId,
@@ -21,6 +20,11 @@ import {
   updateWidgetCSSOnHandleMove,
   updateWidgetCSSOnMinimumLimit,
 } from "./utils/onMouseMoveUtils";
+import {
+  startAnvilSpaceDistributionAction,
+  stopAnvilSpaceDistributionAction,
+  updateSpaceDistributionAction,
+} from "./actions";
 
 interface SpaceDistributionEventsProps {
   ref: React.RefObject<HTMLDivElement>;
@@ -54,16 +58,20 @@ export const useSpaceDistributionEvents = ({
     getMouseSpeedTrackingCallback(currentMouseSpeed);
   const selectedWidgets = useSelector(getSelectedWidgets);
   const { selectWidget } = useWidgetSelection();
+  const onSpaceDistributionStart = useCallback(() => {
+    dispatch(
+      startAnvilSpaceDistributionAction({
+        section: sectionWidgetId,
+        zones: zoneIds,
+      }),
+    );
+  }, [sectionWidgetId, zoneIds]);
   const selectCorrespondingSectionWidget = useCallback(() => {
-    if (
-      !(
-        selectedWidgets.includes(sectionWidgetId) ||
-        zoneIds.some((each) => selectedWidgets.includes(each))
-      )
-    ) {
+    if (!selectedWidgets.includes(sectionWidgetId)) {
       selectWidget(SelectionRequestType.One, [sectionWidgetId]);
     }
-  }, [sectionWidgetId, selectedWidgets, zoneIds]);
+  }, [sectionWidgetId, selectedWidgets]);
+
   useEffect(() => {
     if (ref.current) {
       // Check if the ref to the DOM element exists
@@ -103,6 +111,7 @@ export const useSpaceDistributionEvents = ({
         if (ref.current && sectionLayoutDom) {
           ref.current.classList.add("active");
         }
+
         if (propPaneHandle) {
           propPaneHandle.classList.add("active");
         }
@@ -113,9 +122,11 @@ export const useSpaceDistributionEvents = ({
           const zonePropDom = document.getElementById(
             getPropertyPaneZoneId(zoneId),
           );
+
           if (zoneDom) {
             zoneDom.style.flexBasis = convertFlexGrowToFlexBasis(flexGrow);
           }
+
           if (zonePropDom) {
             zonePropDom.style.flexBasis =
               convertFlexGrowToFlexBasisForPropPane(flexGrow);
@@ -143,25 +154,21 @@ export const useSpaceDistributionEvents = ({
           currentFlexGrow.rightZone !== currentGrowthFactor.rightZone
         ) {
           // Dispatch action to update space distribution
-          dispatch({
-            type: AnvilReduxActionTypes.ANVIL_SPACE_DISTRIBUTION_UPDATE,
-            payload: {
-              zonesDistributed: {
-                [leftZone]: currentGrowthFactor.leftZone,
-                [rightZone]: currentGrowthFactor.rightZone,
-              },
-              sectionLayoutId,
-            },
-          });
+          dispatch(
+            updateSpaceDistributionAction(sectionWidgetId, {
+              [leftZone]: currentGrowthFactor.leftZone,
+              [rightZone]: currentGrowthFactor.rightZone,
+            }),
+          );
         }
+
         // Stop space distribution process
-        dispatch({
-          type: AnvilReduxActionTypes.ANVIL_SPACE_DISTRIBUTION_STOP,
-        });
+        dispatch(stopAnvilSpaceDistributionAction());
         resetCSSOnZones(spaceDistributed);
         removeMouseMoveHandlers();
         currentMouseSpeed.current = 0;
         clearPropPaneDomReferences();
+
         if (ref.current) {
           ref.current.removeEventListener("transitionend", onCSSTransitionEnd);
         }
@@ -175,6 +182,7 @@ export const useSpaceDistributionEvents = ({
         if (!propHandle) {
           const computedProps =
             computePropsForSpaceDistribution(spaceToWorkWith);
+
           columnWidth = computedProps.columnWidth;
           minimumShrinkableSpacePerBlock =
             computedProps.minimumShrinkableSpacePerBlock;
@@ -183,22 +191,23 @@ export const useSpaceDistributionEvents = ({
           const sectionPreviewBlockDom = document.getElementById(
             "prop-pane-" + sectionWidgetId,
           );
+
           if (sectionPreviewBlockDom) {
             const computedPropsForHandle = computePropsForSpaceDistribution(
               sectionPreviewBlockDom.offsetWidth,
             );
+
             columnWidth = computedPropsForHandle.columnWidth;
             minimumShrinkableSpacePerBlock =
               computedPropsForHandle.minimumShrinkableSpacePerBlock;
           }
         }
+
         e.stopPropagation();
         e.preventDefault();
         x = e.clientX; // Store the initial mouse position
         isCurrentHandleDistributingSpace.current = true; // Set distribution flag
-        dispatch({
-          type: AnvilReduxActionTypes.ANVIL_SPACE_DISTRIBUTION_START,
-        });
+        onSpaceDistributionStart();
         addMouseMoveHandlers();
       };
 
@@ -229,6 +238,7 @@ export const useSpaceDistributionEvents = ({
         propPaneHandle = document.getElementById(
           getPropertyPaneDistributionHandleId(leftZone),
         );
+
         if (propPaneHandle) {
           propPaneHandle.classList.add("active");
         }
@@ -245,6 +255,7 @@ export const useSpaceDistributionEvents = ({
         if (!(leftZonePropPaneDom && rightZonePropPaneDom)) {
           tryFetchingPropPaneDomReferences();
         }
+
         // Ensure the reference to the handle and the distribution flag are valid
         if (ref.current && isCurrentHandleDistributingSpace.current) {
           const dx = e.clientX - x; // Calculate the horizontal change in mouse position from the initial click
@@ -277,6 +288,7 @@ export const useSpaceDistributionEvents = ({
               leftZonePropPaneDom,
               rightZonePropPaneDom,
             };
+
             // Check if any of the zones is reaching near to the minimum limit of a zone
             if (
               leftZoneComputedColumns >= minimumShrinkableSpacePerBlock &&
@@ -307,12 +319,14 @@ export const useSpaceDistributionEvents = ({
           }
         }
       };
+
       // Attach mouse down event listener to the handle
       ref.current.addEventListener("mousedown", onMouseDown);
       ref.current.addEventListener(
         PropPaneDistributionHandleCustomEvent,
         onPropPaneHandleMouseDown,
       );
+
       // Cleanup: Remove the mouse down event listener when component is unmounted
       return () => {
         if (ref.current) {
@@ -331,5 +345,6 @@ export const useSpaceDistributionEvents = ({
     sectionWidgetId,
     spaceDistributed,
     spaceToWorkWith,
+    onSpaceDistributionStart,
   ]);
 };

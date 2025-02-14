@@ -2,11 +2,11 @@ package com.appsmith.server.services.ce;
 
 import com.appsmith.external.helpers.MustacheHelper;
 import com.appsmith.external.models.MustacheBindingToken;
+import com.appsmith.external.services.RTSCaller;
 import com.appsmith.server.configurations.CommonConfig;
 import com.appsmith.server.configurations.InstanceConfig;
 import com.appsmith.server.exceptions.AppsmithError;
 import com.appsmith.server.exceptions.AppsmithException;
-import com.appsmith.server.helpers.RTSCaller;
 import com.appsmith.util.WebClientUtils;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -118,7 +119,8 @@ public class AstServiceCEImpl implements AstServiceCE {
         }
         return rtsCaller
                 .post("/rts-api/v1/ast/multiple-script-data", new GetIdentifiersRequestBulk(bindingValues, evalVersion))
-                .flatMapMany(spec -> spec.bodyToMono(GetIdentifiersResponseBulk.class)
+                .flatMapMany(spec -> spec.retrieve()
+                        .bodyToMono(GetIdentifiersResponseBulk.class)
                         .retryWhen(Retry.max(3))
                         .flatMapIterable(getIdentifiersResponse -> getIdentifiersResponse.data)
                         .index())
@@ -143,11 +145,28 @@ public class AstServiceCEImpl implements AstServiceCE {
 
         return Flux.fromIterable(bindingValues)
                 .flatMap(bindingValue -> {
+                    if (!StringUtils.hasText(bindingValue.getValue())) {
+                        // If the binding value is null or empty, it indicates an incorrect entry in the
+                        // dynamicBindingPathList.
+                        // Such bindings are considered invalid and can be safely discarded during refactoring.
+                        // Therefore, we return an empty response.
+
+                        return Mono.empty();
+                    }
+                    if (!bindingValue.getValue().contains(oldName)) {
+                        // This case is not handled in RTS either, so skipping the RTS call here will not affect the
+                        // behavior.
+                        // Example:
+                        // - Old name: foo.bar
+                        // - New name: foo.baz
+                        // - Binding: "foo['bar']"
+                        return Mono.just(Tuples.of(bindingValue, bindingValue.getValue()));
+                    }
                     EntityRefactorRequest entityRefactorRequest = new EntityRefactorRequest(
                             bindingValue.getValue(), oldName, newName, evalVersion, isJSObject);
                     return rtsCaller
                             .post("/rts-api/v1/ast/entity-refactor", entityRefactorRequest)
-                            .flatMap(spec -> spec.toEntity(EntityRefactorResponse.class))
+                            .flatMap(spec -> spec.retrieve().toEntity(EntityRefactorResponse.class))
                             .flatMap(entityRefactorResponseResponseEntity -> {
                                 if (HttpStatus.OK.equals(entityRefactorResponseResponseEntity.getStatusCode())) {
                                     return Mono.just(
@@ -159,8 +178,8 @@ public class AstServiceCEImpl implements AstServiceCE {
                             })
                             .elapsed()
                             .map(tuple -> {
-                                log.debug("Time elapsed since AST refactor call: {} ms", tuple.getT1());
                                 if (tuple.getT1() > MAX_API_RESPONSE_TIME_IN_MS) {
+                                    log.debug("Time elapsed since AST refactor call: {} ms", tuple.getT1());
                                     log.debug("This call took longer than expected. The binding was: {}", bindingValue);
                                 }
                                 return tuple.getT2();

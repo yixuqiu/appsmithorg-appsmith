@@ -6,7 +6,7 @@ import {
   FlexVerticalAlignment,
   Positioning,
 } from "layoutSystems/common/utils/constants";
-import { ReduxActionTypes } from "@appsmith/constants/ReduxActionConstants";
+import { ReduxActionTypes } from "ee/constants/ReduxActionConstants";
 import { DefaultAutocompleteDefinitions } from "widgets/WidgetUtils";
 import type {
   AnvilConfig,
@@ -82,7 +82,6 @@ class StatboxWidget extends ContainerWidget {
       backgroundColor: "white",
       borderWidth: "1",
       borderColor: Colors.GREY_5,
-      minDynamicHeight: 14,
       children: [],
       positioning: Positioning.Fixed,
       responsiveBehavior: ResponsiveBehavior.Fill,
@@ -182,6 +181,7 @@ class StatboxWidget extends ContainerWidget {
               if (layoutSystemType === LayoutSystemTypes.FIXED) {
                 return [];
               }
+
               //get Canvas Widget
               const canvasWidget: FlattenedWidgetProps = get(
                 widget,

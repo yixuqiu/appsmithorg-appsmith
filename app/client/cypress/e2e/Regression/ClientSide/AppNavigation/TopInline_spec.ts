@@ -13,7 +13,7 @@ import {
 
 describe(
   "Test Top + Inline navigation style",
-  { tags: ["@tag.IDE"] },
+  { tags: ["@tag.IDE", "@tag.ImportExport", "@tag.PropertyPane", "@tag.Git"] },
   function () {
     before(() => {
       // Import an application

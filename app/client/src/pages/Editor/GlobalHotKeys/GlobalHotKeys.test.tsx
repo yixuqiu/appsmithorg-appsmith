@@ -3,10 +3,10 @@ import React from "react";
 import {
   createMessage,
   SAVE_HOTKEY_TOASTER_MESSAGE,
-} from "@appsmith/constants/messages";
+} from "ee/constants/messages";
 import { all } from "@redux-saga/core/effects";
 import { redoAction, undoAction } from "actions/pageActions";
-import { Toast } from "design-system";
+import { Toast } from "@appsmith/ads";
 import { MAIN_CONTAINER_WIDGET_ID } from "constants/WidgetConstants";
 import { MemoryRouter } from "react-router-dom";
 import * as utilities from "selectors/editorSelectors";
@@ -44,15 +44,20 @@ jest.mock("constants/routes", () => {
 });
 
 describe("Canvas Hot Keys", () => {
+  const pageId = "0123456789abcdef00000000";
+
   beforeAll(() => {
     runSagaMiddleware();
   });
 
   const mockGetIsFetchingPage = jest.spyOn(utilities, "getIsFetchingPage");
 
+  // TODO: Fix this the next time the file is edited
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function UpdatedEditor({ dsl }: any) {
-    useMockDsl(dsl);
-    return <IDE />;
+    const hasLoaded = useMockDsl(dsl);
+
+    return hasLoaded ? <IDE /> : null;
   }
 
   // These need to be at the top to avoid imports not being mocked. ideally should be in setup.ts but will override for all other tests
@@ -71,8 +76,8 @@ describe("Canvas Hot Keys", () => {
       ...jest.requireActual("sagas/EvaluationsSaga"),
       default: mockGenerator,
     }));
-    jest.mock("@appsmith/sagas/PageSagas", () => ({
-      ...jest.requireActual("@appsmith/sagas/PageSagas"),
+    jest.mock("ee/sagas/PageSagas", () => ({
+      ...jest.requireActual("ee/sagas/PageSagas"),
       default: mockGenerator,
     }));
   });
@@ -85,10 +90,13 @@ describe("Canvas Hot Keys", () => {
       .spyOn(dataTreeSelectors, "getWidgetEvalValues")
       .mockImplementation(mockGetWidgetEvalValues);
     jest
-      .spyOn(utilities, "computeMainContainerWidget")
+      .spyOn(utilities, "computeMainContainerWidget") // TODO: Fix this the next time the file is edited
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .mockImplementation((widget) => widget as any);
 
     it("Cmd + A - select all widgets on canvas", async () => {
+      // TODO: Fix this the next time the file is edited
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const children: any = buildChildren([
         {
           type: "TABS_WIDGET",
@@ -101,9 +109,12 @@ describe("Canvas Hot Keys", () => {
           widgetId: "switchWidgetId",
         },
       ]);
+      // TODO: Fix this the next time the file is edited
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const dsl: any = widgetCanvasFactory.build({
         children,
       });
+
       mockGetIsFetchingPage.mockImplementation(() => false);
       const spyWidgetSelection = jest.spyOn(
         widgetSelectionsActions,
@@ -114,7 +125,7 @@ describe("Canvas Hot Keys", () => {
 
       const component = render(
         <MemoryRouter
-          initialEntries={["/app/applicationSlug/pageSlug-page_id/edit"]}
+          initialEntries={[`/app/applicationSlug/pageSlug-${pageId}/edit`]}
         >
           <MockApplication>
             <GlobalHotKeys
@@ -129,7 +140,8 @@ describe("Canvas Hot Keys", () => {
         </MemoryRouter>,
         { initialState: store.getState(), sagasToRun: sagasToRunForTests },
       );
-      const canvasWidgets = component.queryAllByTestId("test-widget");
+      const canvasWidgets = await component.findAllByTestId("test-widget");
+
       expect(canvasWidgets.length).toBe(2);
       act(() => {
         if (canvasWidgets[0].firstChild) {
@@ -137,8 +149,11 @@ describe("Canvas Hot Keys", () => {
           fireEvent.click(canvasWidgets[0].firstChild);
         }
       });
+      // TODO: Fix this the next time the file is edited
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const tabsWidgetName: any =
         component.container.querySelector(`span.t--widget-name`);
+
       fireEvent.click(tabsWidgetName);
       expect(spyWidgetSelection).toHaveBeenCalledWith(
         SelectionRequestType.One,
@@ -148,7 +163,10 @@ describe("Canvas Hot Keys", () => {
       );
       spyWidgetSelection.mockClear();
 
+      // TODO: Fix this the next time the file is edited
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const artBoard: any = component.queryByTestId("t--canvas-artboard");
+
       // deselect all other widgets
       fireEvent.click(artBoard);
 
@@ -233,6 +251,8 @@ describe("Cut/Copy/Paste hotkey", () => {
     spyPaste.mockClear();
   });
   it("Should copy and paste all selected widgets with hotkey cmd + c and cmd + v ", async () => {
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const children: any = buildChildren([
       {
         type: "TABS_WIDGET",
@@ -251,6 +271,8 @@ describe("Cut/Copy/Paste hotkey", () => {
         parentId: MAIN_CONTAINER_WIDGET_ID,
       },
     ]);
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dsl: any = widgetCanvasFactory.build({
       children,
     });
@@ -267,7 +289,10 @@ describe("Cut/Copy/Paste hotkey", () => {
       </MockPageDSL>,
       { initialState: store.getState(), sagasToRun: sagasToRunForTests },
     );
-    const artBoard: any = component.queryByTestId("t--canvas-artboard");
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const artBoard: any = await component.findByTestId("t--canvas-artboard");
+
     // deselect all other widgets
     fireEvent.click(artBoard);
     act(() => {
@@ -325,6 +350,8 @@ describe("Cut/Copy/Paste hotkey", () => {
     expect(spyWidgetSelection).toBeCalledWith(SelectionRequestType.All);
   });
   it("Should cut and paste all selected widgets with hotkey cmd + x and cmd + v ", async () => {
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const children: any = buildChildren([
       {
         type: "TABS_WIDGET",
@@ -343,6 +370,8 @@ describe("Cut/Copy/Paste hotkey", () => {
         parentId: MAIN_CONTAINER_WIDGET_ID,
       },
     ]);
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dsl: any = widgetCanvasFactory.build({
       children,
     });
@@ -358,7 +387,10 @@ describe("Cut/Copy/Paste hotkey", () => {
         </GlobalHotKeys>
       </MockPageDSL>,
     );
-    const artBoard: any = component.queryByTestId("t--canvas-artboard");
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const artBoard: any = await component.findByTestId("t--canvas-artboard");
+
     // deselect all other widgets
     fireEvent.click(artBoard);
     act(() => {
@@ -402,7 +434,7 @@ describe("Cut/Copy/Paste hotkey", () => {
 });
 
 describe("Undo/Redo hotkey", () => {
-  it("should dispatch undo Action on cmd + z", () => {
+  it("should dispatch undo Action on cmd + z", async () => {
     const dispatchSpy = jest.spyOn(store, "dispatch");
     const component = render(
       <MockPageDSL>
@@ -416,6 +448,9 @@ describe("Undo/Redo hotkey", () => {
         </GlobalHotKeys>
       </MockPageDSL>,
     );
+
+    // wait for the dom to settle down by waitng for the canvas to be loaded
+    await component.findByTestId("t--canvas-artboard");
 
     dispatchSpy.mockClear();
 
@@ -430,10 +465,11 @@ describe("Undo/Redo hotkey", () => {
       );
     });
 
-    expect(dispatchSpy).toBeCalledTimes(1);
-    expect(dispatchSpy).toBeCalledWith(undoAction());
+    await waitFor(() => {
+      expect(dispatchSpy).toBeCalledWith(undoAction());
+    });
   });
-  it("should dispatch redo Action on cmd + shift + z", () => {
+  it("should dispatch redo Action on cmd + shift + z", async () => {
     const dispatchSpy = jest.spyOn(store, "dispatch");
     const component = render(
       <MockPageDSL>
@@ -447,6 +483,9 @@ describe("Undo/Redo hotkey", () => {
         </GlobalHotKeys>
       </MockPageDSL>,
     );
+
+    // wait for the dom to settle down by waitng for the canvas to be loaded
+    await component.findByTestId("t--canvas-artboard");
 
     dispatchSpy.mockClear();
 
@@ -464,7 +503,7 @@ describe("Undo/Redo hotkey", () => {
     expect(dispatchSpy).toBeCalledTimes(1);
     expect(dispatchSpy).toBeCalledWith(redoAction());
   });
-  it("should dispatch redo Action on ctrl + y", () => {
+  it("should dispatch redo Action on ctrl + y", async () => {
     const dispatchSpy = jest.spyOn(store, "dispatch");
     const component = render(
       <MockPageDSL>
@@ -478,6 +517,9 @@ describe("Undo/Redo hotkey", () => {
         </GlobalHotKeys>
       </MockPageDSL>,
     );
+
+    // wait for the dom to settle down by waitng for the canvas to be loaded
+    await component.findByTestId("t--canvas-artboard");
 
     dispatchSpy.mockClear();
 

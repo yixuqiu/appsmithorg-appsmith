@@ -38,18 +38,19 @@ public class Theme extends BaseDomain {
     @JsonView(Views.Public.class)
     String workspaceId;
 
-    @JsonView(Views.Public.class)
+    @JsonView({Views.Public.class, Git.class})
     private Object config;
 
-    @JsonView(Views.Public.class)
+    @JsonView({Views.Public.class, Git.class})
     private Object properties;
 
-    @JsonView(Views.Public.class)
+    @JsonView({Views.Public.class, Git.class})
     private Map<String, Object> stylesheet;
 
     @JsonProperty("isSystemTheme") // manually setting property name to make sure it's compatible with Gson
     @JsonView({Views.Public.class, Git.class})
-    private boolean isSystemTheme = false; // should be false by default
+    // The primitive is changed to wrapper because of serialization - deserialization issues
+    private Boolean isSystemTheme = false; // should be false by default
 
     @Data
     @AllArgsConstructor
@@ -57,6 +58,21 @@ public class Theme extends BaseDomain {
     public static class Colors {
         private String primaryColor;
         private String backgroundColor;
+    }
+
+    public void setSystemTheme(boolean isSystemTheme) {
+        this.isSystemTheme = isSystemTheme;
+    }
+
+    @JsonView({Views.Internal.class})
+    public Boolean getSystemTheme() {
+        return this.isSystemTheme;
+    }
+
+    // To be deleted in later on refactors
+    @JsonView({Views.Internal.class})
+    public Boolean isSystemTheme() {
+        return this.isSystemTheme;
     }
 
     @Override

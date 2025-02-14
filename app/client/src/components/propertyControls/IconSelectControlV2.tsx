@@ -12,9 +12,9 @@ import { replayHighlightClass } from "globalStyles/portals";
 import _ from "lodash";
 import { generateReactKey } from "utils/generators";
 import { emitInteractionAnalyticsEvent } from "utils/AppsmithUtils";
-import { Tooltip } from "design-system";
-import { ICONS, Icon } from "@design-system/widgets";
-import type { IconProps } from "@design-system/widgets";
+import { Tooltip } from "@appsmith/ads";
+import { ICONS, Icon } from "@appsmith/wds";
+import type { IconProps } from "@appsmith/wds";
 
 const IconSelectContainerStyles = createGlobalStyle<{
   targetWidth: number | undefined;
@@ -53,10 +53,10 @@ const StyledButton = styled(Button)`
     border: 1px solid var(--ads-v2-color-border-emphasis);
   }
 
-  &:focus {
+  &:focus-visible {
     outline: var(--ads-v2-border-width-outline) solid
       var(--ads-v2-color-outline);
-    border: 1px solid var(--ads-v2-color-border-emphasis);
+    outline-offset: var(--ads-v2-offset-outline);
   }
 
   > span.bp3-button-text {
@@ -124,7 +124,11 @@ export interface IconSelectControlState {
 }
 
 const NONE = "(none)";
-type IconType = Required<IconProps>["name"] | typeof NONE;
+const EMPTY = "";
+
+type IconType = Required<IconProps>["name"] | typeof NONE | typeof EMPTY;
+// TODO: Fix this the next time the file is edited
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ICON_NAMES = Object.keys(ICONS) as any as IconType[];
 const icons = new Set(ICON_NAMES);
 
@@ -174,6 +178,8 @@ class IconSelectControlV2 extends BaseControl<
   // debouncedSetState is used to fix the following bug:
   // https://github.com/appsmithorg/appsmith/pull/10460#issuecomment-1022895174
   private debouncedSetState = _.debounce(
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (obj: any, callback?: () => void) => {
       this.setState((prevState: IconSelectControlState) => {
         return {
@@ -247,7 +253,8 @@ class IconSelectControlV2 extends BaseControl<
             tabIndex={0}
           >
             <span>
-              {iconName !== NONE &&
+              {iconName !== "" &&
+                iconName !== NONE &&
                 iconName !== undefined &&
                 iconName !== null && <Icon name={iconName} />}
             </span>
@@ -286,14 +293,19 @@ class IconSelectControlV2 extends BaseControl<
           emitInteractionAnalyticsEvent(this.iconSelectTargetRef.current, {
             key: e.key,
           });
+
           if (document.activeElement === this.searchInput.current) {
             (document.activeElement as HTMLElement).blur();
+
             if (this.initialItemIndex < 0) this.initialItemIndex = -4;
             else break;
           }
+
           const nextIndex = this.initialItemIndex + 4;
+
           if (nextIndex < this.filteredItems.length)
             this.setActiveIcon(nextIndex);
+
           e.preventDefault();
           break;
         }
@@ -312,11 +324,14 @@ class IconSelectControlV2 extends BaseControl<
             this.searchInput.current.focus();
             break;
           }
+
           emitInteractionAnalyticsEvent(this.iconSelectTargetRef.current, {
             key: e.key,
           });
           const nextIndex = this.initialItemIndex - 4;
+
           if (nextIndex >= 0) this.setActiveIcon(nextIndex);
+
           e.preventDefault();
           break;
         }
@@ -325,12 +340,15 @@ class IconSelectControlV2 extends BaseControl<
           if (document.activeElement === this.searchInput.current) {
             break;
           }
+
           emitInteractionAnalyticsEvent(this.iconSelectTargetRef.current, {
             key: e.key,
           });
           const nextIndex = this.initialItemIndex + 1;
+
           if (nextIndex < this.filteredItems.length)
             this.setActiveIcon(nextIndex);
+
           e.preventDefault();
           break;
         }
@@ -339,11 +357,14 @@ class IconSelectControlV2 extends BaseControl<
           if (document.activeElement === this.searchInput.current) {
             break;
           }
+
           emitInteractionAnalyticsEvent(this.iconSelectTargetRef.current, {
             key: e.key,
           });
           const nextIndex = this.initialItemIndex - 1;
+
           if (nextIndex >= 0) this.setActiveIcon(nextIndex);
+
           e.preventDefault();
           break;
         }
@@ -354,6 +375,7 @@ class IconSelectControlV2 extends BaseControl<
             this.filteredItems.length !== 2
           )
             break;
+
           emitInteractionAnalyticsEvent(this.iconSelectTargetRef.current, {
             key: e.key,
           });
@@ -433,13 +455,14 @@ class IconSelectControlV2 extends BaseControl<
     if (!modifiers.matchesPredicate) {
       return null;
     }
+
     return (
       <Tooltip content={icon} mouseEnterDelay={0}>
         <StyledMenuItem
           active={modifiers.active}
           key={icon}
           onClick={handleClick}
-          text={icon === NONE ? NONE : <Icon name={icon} />}
+          text={icon === NONE || icon === EMPTY ? NONE : <Icon name={icon} />}
           textClassName={icon === NONE ? "bp3-icon-(none)" : ""}
         />
       </Tooltip>
@@ -450,6 +473,7 @@ class IconSelectControlV2 extends BaseControl<
     if (iconName === NONE || query === "") {
       return true;
     }
+
     return (iconName || "").toLowerCase().indexOf(query.toLowerCase()) >= 0;
   };
 
@@ -472,9 +496,12 @@ class IconSelectControlV2 extends BaseControl<
 
   static canDisplayValueInUI(
     config: IconSelectControlV2Props,
+    // TODO: Fix this the next time the file is edited
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     value: any,
   ): boolean {
     if (icons.has(value)) return true;
+
     return false;
   }
 }

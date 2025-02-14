@@ -41,6 +41,8 @@ export interface WidgetLayoutProps {
 export interface LayoutProps {
   layout: LayoutProps[] | WidgetLayoutProps[]; // Array of layout components or widgets to render.
   layoutId: string; // Identifier of layout
+  // TODO: Fix this the next time the file is edited
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   layoutStyle?: { [key: string]: any }; // React.CSSProperties for overriding default layout style.
   layoutType: LayoutComponentTypes; // Used to identify the correct layout component to render.
 
@@ -140,19 +142,6 @@ export interface DraggedWidget {
   widgetId: string;
 }
 
-export type GenerateHighlights = (
-  baseHighlight: AnvilHighlightInfo,
-  layoutDimension: LayoutElementPosition,
-  currentDimension: LayoutElementPosition,
-  prevDimension: LayoutElementPosition | undefined,
-  nextDimension: LayoutElementPosition | undefined,
-  rowIndex: number,
-  isLastHighlight: boolean,
-  prevHighlight: AnvilHighlightInfo | undefined,
-  hasFillWidget?: boolean,
-  isDropTarget?: boolean,
-) => AnvilHighlightInfo[];
-
 export type GetInitialHighlights = (
   layoutProps: LayoutProps,
   baseHighlight: AnvilHighlightInfo,
@@ -202,14 +191,3 @@ export interface HighlightPayload {
   highlights: AnvilHighlightInfo[];
   skipEntity: boolean;
 }
-
-export type UpdateHighlights = (
-  arr: AnvilHighlightInfo[],
-  baseHighlight: AnvilHighlightInfo,
-  layoutDimension: LayoutElementPosition,
-  currDimension: LayoutElementPosition,
-  nextDimension: LayoutElementPosition | undefined,
-  rowIndex: number,
-  isLastHighlight: boolean,
-  hasFillWidget?: boolean,
-) => AnvilHighlightInfo[];

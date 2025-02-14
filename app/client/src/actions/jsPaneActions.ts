@@ -1,15 +1,16 @@
-import type { ReduxAction } from "@appsmith/constants/ReduxActionConstants";
-import { ReduxActionTypes } from "@appsmith/constants/ReduxActionConstants";
-import type { JSCollection, JSAction } from "entities/JSCollection";
+import { ReduxActionTypes } from "ee/constants/ReduxActionConstants";
+import { type ReduxAction } from "./ReduxActionTypes";
+import type { JSAction, JSCollection } from "entities/JSCollection";
 import type {
   RefactorAction,
   SetFunctionPropertyPayload,
-} from "@appsmith/api/JSActionAPI";
-import type { EventLocation } from "@appsmith/utils/analyticsUtilTypes";
+} from "ee/api/JSActionAPI";
+import type { EventLocation } from "ee/utils/analyticsUtilTypes";
 import type {
   JSEditorTab,
   JSPaneDebuggerState,
 } from "reducers/uiReducers/jsPaneReducer";
+import type { JSUpdate } from "../utils/JSPaneUtils";
 
 export const createNewJSCollection = (
   pageId: string,
@@ -22,14 +23,6 @@ export const createNewJSCollection = (
 }> => ({
   type: ReduxActionTypes.CREATE_NEW_JS_ACTION,
   payload: { pageId, from, functionName },
-});
-
-export const updateJSCollection = (
-  body: string,
-  id: string,
-): ReduxAction<{ body: string; id: string }> => ({
-  type: ReduxActionTypes.UPDATE_JS_ACTION_INIT,
-  payload: { body, id },
 });
 
 export const updateJSCollectionBody = (
@@ -57,12 +50,26 @@ export const updateJSCollectionBodySuccess = (payload: {
   };
 };
 
+export const jsSaveActionStart = (payload: { id: string }) => {
+  return {
+    type: ReduxActionTypes.JS_ACTION_SAVE_START,
+    payload,
+  };
+};
+
 export const refactorJSCollectionAction = (payload: {
   refactorAction: RefactorAction;
   actionCollection: JSCollection;
 }) => {
   return {
     type: ReduxActionTypes.REFACTOR_JS_ACTION_NAME,
+    payload,
+  };
+};
+
+export const jsSaveActionComplete = (payload: { id: string }) => {
+  return {
+    type: ReduxActionTypes.JS_ACTION_SAVE_COMPLETE,
     payload,
   };
 };
@@ -124,5 +131,12 @@ export const setJsPaneDebuggerState = (
   payload: Partial<JSPaneDebuggerState>,
 ) => ({
   type: ReduxActionTypes.SET_JS_PANE_DEBUGGER_STATE,
+  payload,
+});
+
+export const executeJSUpdates = (
+  payload: Record<string, JSUpdate>,
+): ReduxAction<unknown> => ({
+  type: ReduxActionTypes.EXECUTE_JS_UPDATES,
   payload,
 });

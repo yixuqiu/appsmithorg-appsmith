@@ -1,16 +1,9 @@
-import { featureFlagIntercept } from "../../../../support/Objects/FeatureFlags";
 import { partialImportExport } from "../../../../support/Objects/ObjectsCore";
 
 describe(
   "Partial import functionality",
-  { tags: ["@tag.ImportExport"] },
+  { tags: ["@tag.ImportExport", "@tag.Git"] },
   () => {
-    before(() => {
-      featureFlagIntercept({
-        release_show_partial_import_export_enabled: true,
-      });
-    });
-
     beforeEach(() => {
       partialImportExport.OpenImportModal();
     });

@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.appsmith.external.constants.AnalyticsConstants.ADMIN_EMAIL_DOMAIN_HASH;
 import static com.appsmith.external.constants.AnalyticsConstants.EMAIL_DOMAIN_HASH;
 import static com.appsmith.external.constants.AnalyticsConstants.GOAL;
 import static com.appsmith.external.constants.AnalyticsConstants.IP;
@@ -80,7 +81,7 @@ public class AnalyticsServiceCEImpl implements AnalyticsServiceCE {
     }
 
     private String hash(String value) {
-        return value == null ? "" : DigestUtils.sha256Hex(value);
+        return StringUtils.isEmpty(value) ? "" : DigestUtils.sha256Hex(value);
     }
 
     private String getEmailDomainHash(String email) {
@@ -140,7 +141,7 @@ public class AnalyticsServiceCEImpl implements AnalyticsServiceCE {
                                     "isSuperUser", isSuperUser,
                                     "instanceId", instanceId,
                                     "mostRecentlyUsedWorkspaceId", tuple.getT4(),
-                                    "role", ObjectUtils.defaultIfNull(userData.getRole(), ""),
+                                    "role", "",
                                     "proficiency", ObjectUtils.defaultIfNull(userData.getProficiency(), ""),
                                     "goal", ObjectUtils.defaultIfNull(userData.getUseCase(), ""))));
                     analytics.flush();
@@ -149,13 +150,7 @@ public class AnalyticsServiceCEImpl implements AnalyticsServiceCE {
     }
 
     public void identifyInstance(
-            String instanceId,
-            String role,
-            String proficiency,
-            String useCase,
-            String adminEmail,
-            String adminFullName,
-            String ip) {
+            String instanceId, String proficiency, String useCase, String adminEmail, String adminFullName, String ip) {
         if (!isActive()) {
             return;
         }
@@ -166,7 +161,7 @@ public class AnalyticsServiceCEImpl implements AnalyticsServiceCE {
                         "isInstance",
                         true, // Is this "identify" data-point for a user or an instance?
                         ROLE,
-                        ObjectUtils.defaultIfNull(role, ""),
+                        "",
                         PROFICIENCY,
                         ObjectUtils.defaultIfNull(proficiency, ""),
                         GOAL,
@@ -205,6 +200,7 @@ public class AnalyticsServiceCEImpl implements AnalyticsServiceCE {
         // Hash usernames at all places for self-hosted instance
         if (shouldHashUserId(event, userId, hashUserId, commonConfig.isCloudHosting())) {
             final String hashedUserId = hash(userId);
+            // Remove request key, if it's self-hosted as it contains user's evaluated params
             analyticsProperties.remove("request");
             for (final Map.Entry<String, Object> entry : analyticsProperties.entrySet()) {
                 if (userId.equals(entry.getValue())) {
@@ -252,9 +248,12 @@ public class AnalyticsServiceCEImpl implements AnalyticsServiceCE {
                         String email = analyticsProperties.get(EMAIL) != null
                                 ? analyticsProperties.get(EMAIL).toString()
                                 : "";
-                        analyticsProperties.put(EMAIL_DOMAIN_HASH, getEmailDomainHash(email));
+                        String domainHash = getEmailDomainHash(email);
+                        analyticsProperties.put(EMAIL_DOMAIN_HASH, domainHash);
+                        analyticsProperties.put(ADMIN_EMAIL_DOMAIN_HASH, domainHash);
                     } else {
                         analyticsProperties.put(EMAIL_DOMAIN_HASH, emailDomainHash);
+                        analyticsProperties.put(ADMIN_EMAIL_DOMAIN_HASH, commonConfig.getAdminEmailDomainHash());
                     }
                     analyticsProperties.put("originService", "appsmith-server");
                     analyticsProperties.put("instanceId", instanceId);

@@ -10,16 +10,17 @@ import {
 
 describe(
   "Start with data userflow : Create different datasources and save",
-  { tags: ["@tag.excludeForAirgap", "@tag.Datasource"] },
+  {
+    tags: [
+      "@tag.excludeForAirgap",
+      "@tag.Datasource",
+      "@tag.Git",
+      "@tag.AccessControl",
+    ],
+  },
   function () {
     beforeEach(() => {
       homePage.Signout();
-      featureFlagIntercept(
-        {
-          ab_show_templates_instead_of_blank_canvas_enabled: true,
-        },
-        false,
-      );
       agHelper.GenerateUUID();
       cy.get("@guid").then((uid) => {
         homePage.SignUp(

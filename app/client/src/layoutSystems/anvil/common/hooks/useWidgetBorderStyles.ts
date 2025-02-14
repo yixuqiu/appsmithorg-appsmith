@@ -1,13 +1,14 @@
-import type { AppState } from "@appsmith/reducers";
+import type { AppState } from "ee/reducers";
 import WidgetFactory from "WidgetProvider/factory";
 import { getWidgetErrorCount } from "layoutSystems/anvil/editor/AnvilWidgetName/selectors";
 import {
   getAnvilHighlightShown,
   getAnvilSpaceDistributionStatus,
+  getWidgetsDistributingSpace,
 } from "layoutSystems/anvil/integrations/selectors";
 import { useSelector } from "react-redux";
-import { combinedPreviewModeSelector } from "selectors/editorSelectors";
 import { isWidgetFocused, isWidgetSelected } from "selectors/widgetSelectors";
+import { selectCombinedPreviewMode } from "selectors/gitModSelectors";
 
 export function useWidgetBorderStyles(widgetId: string, widgetType: string) {
   /** Selectors */
@@ -28,8 +29,10 @@ export function useWidgetBorderStyles(widgetId: string, widgetType: string) {
   const isDistributingSpace: boolean = useSelector(
     getAnvilSpaceDistributionStatus,
   );
-
-  const isPreviewMode = useSelector(combinedPreviewModeSelector);
+  const widgetsEffectedBySpaceDistribution = useSelector(
+    getWidgetsDistributingSpace,
+  );
+  const isPreviewMode = useSelector(selectCombinedPreviewMode);
 
   /** EO selectors */
 
@@ -38,35 +41,42 @@ export function useWidgetBorderStyles(widgetId: string, widgetType: string) {
     return {};
   }
 
+  const isSectionDistributingSpace =
+    widgetsEffectedBySpaceDistribution.section == widgetId;
   // Show the border if the widget has widgets being dragged or redistributed inside it
   const showDraggedOnBorder =
     (highlightShown && highlightShown.canvasId === widgetId) ||
-    (isDistributingSpace && isSelected);
+    isSectionDistributingSpace;
 
   const onCanvasUI = WidgetFactory.getConfig(widgetType)?.onCanvasUI;
 
   // By default don't show any borders
   let borderColor = "transparent";
   let borderWidth = "var(--on-canvas-ui-border-width-2)";
+
   // If widget is focused, use the thin borders
   if (isFocused && !isSelected) {
     borderColor = `var(${onCanvasUI.selectionBGCSSVar})`;
     borderWidth = "var(--on-canvas-ui-border-width-1)";
   }
+
   // If the widget is select default to the thick borders
   if (isSelected) {
     borderColor = `var(${onCanvasUI.selectionBGCSSVar})`;
   }
+
   // If the widget has widgets being dragged or redistributed inside it
   // Use the thin border
   if (showDraggedOnBorder) {
     borderColor = `var(${onCanvasUI.selectionBGCSSVar})`;
     borderWidth = "var(--on-canvas-ui-border-width-1)";
   }
+
   // If the widget has an error, use the error color
   if (showError) {
     borderColor = `var(--on-canvas-ui-widget-error)`;
   }
+
   // Don't show border when resizing the canvas, redistributing space or dragging widgets
   const shouldHideBorder =
     isCanvasResizing || isDistributingSpace || isDragging;

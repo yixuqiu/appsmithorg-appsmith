@@ -10,7 +10,7 @@ import {
 
 describe(
   "Delete workspace test spec",
-  { tags: ["@tag.Workspace"] },
+  { tags: ["@tag.Workspace", "@tag.AccessControl"] },
   function () {
     let newWorkspaceName: any;
 
@@ -40,10 +40,9 @@ describe(
           false,
         );
         homePage.LogOutviaAPI();
-        homePage.LogintoApp(
+        cy.LoginFromAPI(
           Cypress.env("TESTUSERNAME1"),
           Cypress.env("TESTPASSWORD1"),
-          "App Viewer",
         );
         homePage.OpenWorkspaceOptions(newWorkspaceName);
         agHelper.AssertContains(

@@ -7,7 +7,7 @@ import {
 
 describe(
   "Custom widget Tests",
-  { tags: ["@tag.Widget", "@tag.Custom"] },
+  { tags: ["@tag.Widget", "@tag.excludeForAirgap", "@tag.Binding"] },
   function () {
     before(() => {
       agHelper.AddDsl("customWidget");

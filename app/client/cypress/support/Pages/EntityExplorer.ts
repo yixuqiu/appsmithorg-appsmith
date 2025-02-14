@@ -8,6 +8,7 @@ import EditorNavigation, {
   PageLeftPane,
   PagePaneSegment,
 } from "./EditorNavigation";
+import AddView from "./IDE/AddView";
 import PageList from "./PageList";
 
 type templateActions =
@@ -27,7 +28,7 @@ interface EntityActionParams {
   entityNameinLeftSidebar: string;
   action?:
     | "Show bindings"
-    | "Edit name"
+    | "Rename"
     | "Delete"
     | "Clone"
     | "Settings"
@@ -64,13 +65,14 @@ export class EntityExplorer {
   _adsPopup = "div[role='menu']";
   _entityExplorerWrapper = ".t--entity-explorer-wrapper";
   _widgetTagsList =
-    "[data-testid='t--widget-sidebar-scrollable-wrapper'] .widget-tag-collapisble";
+    "[data-testid='t--widget-sidebar-scrollable-wrapper'] .widget-tag-collapsible";
   _widgetCards = ".t--widget-card-draggable";
   _widgetSearchInput = "#entity-explorer-search";
   _widgetCardTitle = ".t--widget-card-draggable span.ads-v2-text";
-  _widgetTagSuggestedWidgets = ".widget-tag-collapisble-suggested";
-  _widgetTagBuildingBlocks = ".widget-tag-collapisble-building-blocks";
+  _widgetTagSuggestedWidgets = ".widget-tag-collapsible-suggested";
+  _widgetTagBuildingBlocks = ".widget-tag-collapsible-building-blocks";
   _widgetSeeMoreButton = "[data-testid='t--explorer-ui-entity-tag-see-more']";
+  _entityName = ".t--entity-name";
 
   public ActionContextMenuByEntityName({
     action = "Delete",
@@ -247,8 +249,7 @@ export class EntityExplorer {
     this.agHelper.ClickOutside(); //to close the evaluated pop-up
     PageLeftPane.switchSegment(PagePaneSegment.Queries);
     PageLeftPane.switchToAddNew();
-    let overlayItem = this._visibleTextSpan(dsName);
-    this.agHelper.GetNClick(overlayItem);
+    AddView.clickCreateOption(dsName);
   }
 
   public CopyPasteWidget(widgetName: string) {
@@ -271,7 +272,7 @@ export class EntityExplorer {
     if (viaMenu)
       this.ActionContextMenuByEntityName({
         entityNameinLeftSidebar: entityName,
-        action: "Edit name",
+        action: "Rename",
         entityType,
       });
     else cy.xpath(PageLeftPane.listItemSelector(entityName)).dblclick();

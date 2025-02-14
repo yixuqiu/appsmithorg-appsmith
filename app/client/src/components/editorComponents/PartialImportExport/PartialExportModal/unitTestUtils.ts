@@ -173,9 +173,15 @@ export const mockAppDSProps: Datasource[] = [
         datasourceConfiguration: {
           url: "string",
           connection: {
+            // TODO: Fix this the next time the file is edited
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             mode: "READ_WRITE" as any,
             ssl: {
+              // TODO: Fix this the next time the file is edited
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               authType: "DEFAULT" as any,
+              // TODO: Fix this the next time the file is edited
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } as any,
           },
           authentication: {
@@ -221,9 +227,15 @@ export const mockAppDSProps: Datasource[] = [
         datasourceConfiguration: {
           url: "string",
           connection: {
+            // TODO: Fix this the next time the file is edited
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             mode: "READ_WRITE" as any,
             ssl: {
+              // TODO: Fix this the next time the file is edited
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               authType: "DEFAULT" as any,
+              // TODO: Fix this the next time the file is edited
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } as any,
           },
 
@@ -2429,9 +2441,6 @@ export const defaultAppState = {
                   authType: "SCRAM_SHA_1",
                   username: "mockdb-admin",
                   databaseName: "movies",
-                  hasExpired: {
-                    scanAvailable: true,
-                  },
                 },
                 properties: [
                   {
@@ -2490,9 +2499,6 @@ export const defaultAppState = {
                   authenticationType: "dbAuth",
                   username: "users",
                   databaseName: "users",
-                  hasExpired: {
-                    scanAvailable: true,
-                  },
                 },
               },
               isConfigured: true,
@@ -9766,8 +9772,9 @@ export const defaultAppState = {
                 },
               },
               {
-                label: "Use Prepared Statement",
-                info: "Prepared statements prevent SQL injections on your queries but do not support dynamic bindings outside values in your SQL",
+                label: "Use prepared statements",
+                tooltipText:
+                  "Prepared statements prevent SQL injections on your queries but do not support dynamic bindings outside values in your SQL",
                 configProperty:
                   "actionConfiguration.pluginSpecifiedTemplates[0].value",
                 controlType: "SWITCH",
@@ -10031,21 +10038,20 @@ export const defaultAppState = {
             id: 1,
             children: [
               {
-                label: "Run query on page load",
+                label: "Run the query on page load",
                 configProperty: "executeOnLoad",
                 controlType: "SWITCH",
-                subtitle: "Will refresh data each time the page is loaded",
               },
               {
-                label: "Request confirmation before running query",
+                label: "Request confirmation before running this query",
                 configProperty: "confirmBeforeExecute",
                 controlType: "SWITCH",
-                subtitle:
+                tooltipText:
                   "Ask confirmation from the user each time before refreshing data",
               },
               {
                 label: "Smart BSON substitution",
-                subtitle:
+                tooltipText:
                   "Turning on this property fixes the BSON substitution of bindings in the Mongo BSON document by adding/removing quotes intelligently and reduces developer errors",
                 configProperty:
                   "actionConfiguration.formData.smartSubstitution.data",
@@ -10068,21 +10074,20 @@ export const defaultAppState = {
             id: 1,
             children: [
               {
-                label: "Run query on page load",
+                label: "Run the query on page load",
                 configProperty: "executeOnLoad",
                 controlType: "SWITCH",
-                subtitle: "Will refresh data each time the page is loaded",
               },
               {
-                label: "Request confirmation before running query",
+                label: "Request confirmation before running this query",
                 configProperty: "confirmBeforeExecute",
                 controlType: "SWITCH",
-                subtitle:
+                tooltipText:
                   "Ask confirmation from the user each time before refreshing data",
               },
               {
-                label: "Use Prepared Statement",
-                subtitle:
+                label: "Use prepared statements",
+                tooltipText:
                   "Prepared statements prevent SQL injections on your queries but do not support dynamic bindings outside values in your SQL",
                 configProperty:
                   "actionConfiguration.pluginSpecifiedTemplates[0].value",
@@ -10105,23 +10110,22 @@ export const defaultAppState = {
             id: 1,
             children: [
               {
-                label: "Run API on page load",
+                label: "Run the API on page load",
                 configProperty: "executeOnLoad",
                 controlType: "SWITCH",
-                subtitle: "Will refresh data each time the page is loaded",
               },
               {
-                label: "Request confirmation before running API",
+                label: "Request confirmation before running this API",
                 configProperty: "confirmBeforeExecute",
                 controlType: "SWITCH",
-                subtitle:
+                tooltipText:
                   "Ask confirmation from the user each time before refreshing data",
               },
               {
                 label: "Encode query params",
                 configProperty: "actionConfiguration.encodeParamsToggle",
                 controlType: "SWITCH",
-                subtitle:
+                tooltipText:
                   "Encode query params for all APIs. Also encode form body when Content-Type header is set to x-www-form-encoded",
               },
               {
@@ -10129,7 +10133,7 @@ export const defaultAppState = {
                 configProperty:
                   "actionConfiguration.pluginSpecifiedTemplates[0].value",
                 controlType: "SWITCH",
-                subtitle:
+                tooltipText:
                   "Turning on this property fixes the JSON substitution of bindings in API body by adding/removing quotes intelligently and reduces developer errors",
                 initialValue: true,
               },
@@ -10138,8 +10142,6 @@ export const defaultAppState = {
                 configProperty: "actionConfiguration.httpVersion",
                 name: "actionConfiguration.httpVersion",
                 controlType: "DROP_DOWN",
-                subtitle:
-                  "Select the protocol that best suits your security and performance requirements.",
                 initialValue: "HTTP/1.1",
                 options: [
                   {
@@ -10163,7 +10165,6 @@ export const defaultAppState = {
                 controlType: "INPUT_TEXT",
                 configProperty: "actionConfiguration.timeoutInMillisecond",
                 dataType: "NUMBER",
-                width: "270px",
               },
             ],
           },
@@ -10174,23 +10175,22 @@ export const defaultAppState = {
             id: 1,
             children: [
               {
-                label: "Run API on page load",
+                label: "Run the API on page load",
                 configProperty: "executeOnLoad",
                 controlType: "SWITCH",
-                subtitle: "Will refresh data each time the page is loaded",
               },
               {
-                label: "Request confirmation before running API",
+                label: "Request confirmation before running this API",
                 configProperty: "confirmBeforeExecute",
                 controlType: "SWITCH",
-                subtitle:
+                tooltipText:
                   "Ask confirmation from the user each time before refreshing data",
               },
               {
                 label: "Encode query params",
                 configProperty: "actionConfiguration.encodeParamsToggle",
                 controlType: "SWITCH",
-                subtitle:
+                tooltipText:
                   "Encode query params for all APIs. Also encode form body when Content-Type header is set to x-www-form-encoded",
               },
               {
@@ -10198,7 +10198,7 @@ export const defaultAppState = {
                 configProperty:
                   "actionConfiguration.pluginSpecifiedTemplates[0].value",
                 controlType: "SWITCH",
-                subtitle:
+                tooltipText:
                   "Turning on this property fixes the JSON substitution of bindings in API body by adding/removing quotes intelligently and reduces developer errors",
                 initialValue: true,
               },
@@ -10207,8 +10207,6 @@ export const defaultAppState = {
                 configProperty: "actionConfiguration.httpVersion",
                 name: "actionConfiguration.httpVersion",
                 controlType: "DROP_DOWN",
-                subtitle:
-                  "Select the protocol that best suits your security and performance requirements.",
                 initialValue: "HTTP/1.1",
                 options: [
                   {
@@ -10232,7 +10230,6 @@ export const defaultAppState = {
                 controlType: "INPUT_TEXT",
                 configProperty: "actionConfiguration.timeoutInMillisecond",
                 dataType: "NUMBER",
-                width: "270px",
               },
             ],
           },
@@ -10279,10 +10276,10 @@ export const defaultAppState = {
         useCase: "personal project",
         enableTelemetry: true,
         roles: [
-          "Upgrade to business edition to access roles and groups for conditional business logic",
+          "Upgrade to business plan to access roles and groups for conditional business logic",
         ],
         groups: [
-          "Upgrade to business edition to access roles and groups for conditional business logic",
+          "Upgrade to business plan to access roles and groups for conditional business logic",
         ],
         emptyInstance: false,
         accountNonExpired: true,
@@ -11216,8 +11213,6 @@ export const defaultAppState = {
     templates: {
       isImportingTemplate: false,
       isImportingTemplateToApp: false,
-      isImportingStarterBuildingBlockToApp: false,
-      starterBuildingBlockDatasourcePrompt: false,
       loadingFilters: false,
       gettingAllTemplates: false,
       gettingTemplate: false,
@@ -12707,10 +12702,10 @@ export const defaultAppState = {
           useCase: "personal project",
           enableTelemetry: true,
           roles: [
-            "Upgrade to business edition to access roles and groups for conditional business logic",
+            "Upgrade to business plan to access roles and groups for conditional business logic",
           ],
           groups: [
-            "Upgrade to business edition to access roles and groups for conditional business logic",
+            "Upgrade to business plan to access roles and groups for conditional business logic",
           ],
           emptyInstance: false,
           accountNonExpired: true,
@@ -12731,10 +12726,10 @@ export const defaultAppState = {
         useCase: "personal project",
         enableTelemetry: true,
         roles: [
-          "Upgrade to business edition to access roles and groups for conditional business logic",
+          "Upgrade to business plan to access roles and groups for conditional business logic",
         ],
         groups: [
-          "Upgrade to business edition to access roles and groups for conditional business logic",
+          "Upgrade to business plan to access roles and groups for conditional business logic",
         ],
         emptyInstance: false,
         accountNonExpired: true,
@@ -12753,33 +12748,23 @@ export const defaultAppState = {
           release_datasource_environments_enabled: false,
           release_appnavigationlogoupload_enabled: false,
           release_embed_hide_share_settings_enabled: false,
-          ab_gsheet_schema_enabled: true,
           release_table_serverside_filtering_enabled: false,
           license_branding_enabled: false,
           license_sso_saml_enabled: false,
           license_sso_oidc_enabled: false,
-          ab_mock_mongo_schema_enabled: true,
           license_private_embeds_enabled: false,
           release_show_publish_app_to_community_enabled: false,
           license_gac_enabled: false,
           release_anvil_enabled: false,
-          ab_show_templates_instead_of_blank_canvas_enabled: true,
           release_app_sidebar_enabled: false,
-          release_server_dsl_migrations_enabled: false,
           license_git_branch_protection_enabled: false,
-          release_git_autocommit_feature_enabled: true,
           license_widget_rtl_support_enabled: false,
           release_show_new_sidebar_announcement_enabled: false,
           rollout_app_sidebar_enabled: false,
-          release_show_partial_import_export_enabled: true,
           ab_one_click_learning_popover_enabled: false,
-          release_side_by_side_ide_enabled: false,
-          release_global_add_pane_enabled: false,
           license_git_unlimited_repo_enabled: false,
-          ab_ds_binding_enabled: true,
           ask_ai_js: false,
           license_connection_pool_size_enabled: false,
-          release_widgetdiscovery_enabled: false,
           ab_ai_js_function_completion_enabled: true,
           release_workflows_enabled: false,
           license_scim_enabled: false,
@@ -12787,7 +12772,6 @@ export const defaultAppState = {
           license_audit_logs_enabled: false,
           ask_ai_sql: false,
           release_query_module_enabled: false,
-          ab_ds_schema_enabled: true,
           ab_onboarding_flow_start_with_data_dev_only_enabled: false,
           license_session_limit_enabled: false,
           rollout_datasource_test_rate_limit_enabled: false,

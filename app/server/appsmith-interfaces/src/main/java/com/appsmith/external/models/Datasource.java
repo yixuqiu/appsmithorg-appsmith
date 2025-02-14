@@ -25,7 +25,7 @@ import java.util.Set;
 @NoArgsConstructor
 @Document
 @FieldNameConstants
-public class Datasource extends BranchAwareDomain {
+public class Datasource extends GitSyncedDomain {
 
     @Transient
     public static final String DEFAULT_NAME_PREFIX = "Untitled datasource";
@@ -42,19 +42,14 @@ public class Datasource extends BranchAwareDomain {
     @JsonView(Views.Public.class)
     String pluginName;
 
-    // Organizations migrated to workspaces, kept the field as deprecated to support the old migration
-    @Deprecated
-    @JsonView(Views.Public.class)
-    String organizationId;
-
     @JsonView({Views.Public.class, FromRequest.class})
     String workspaceId;
 
-    @JsonView(Views.Public.class)
+    @JsonView({Views.Public.class, Git.class})
     String templateName;
 
     // This is only kept public for embedded datasource
-    @JsonView({Views.Public.class, FromRequest.class})
+    @JsonView({Views.Public.class, FromRequest.class, Git.class})
     DatasourceConfiguration datasourceConfiguration;
 
     @Transient
@@ -152,5 +147,5 @@ public class Datasource extends BranchAwareDomain {
         this.setMessages(null);
     }
 
-    public static class Fields extends BranchAwareDomain.Fields {}
+    public static class Fields extends RefAwareDomain.Fields {}
 }

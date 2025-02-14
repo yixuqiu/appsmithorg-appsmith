@@ -1,5 +1,4 @@
 import template from "../../../../locators/TemplatesLocators.json";
-import gitSyncLocators from "../../../../locators/gitSyncLocators";
 import widgetLocators from "../../../../locators/Widgets.json";
 let repoName;
 let newWorkspaceName;
@@ -15,7 +14,7 @@ import {
 
 describe(
   "Fork a template to the current app",
-  { tags: ["@tag.Templates", "@tag.excludeForAirgap"] },
+  { tags: ["@tag.Templates", "@tag.excludeForAirgap", "@tag.Git"] },
   () => {
     before(() => {
       _.homePage.NavigateToHome();
@@ -32,12 +31,10 @@ describe(
     });
 
     it("1.Bug #17002 Forking a template into an existing app which is connected to git makes the application go into a bad state ", function () {
-      cy.get(template.startFromTemplateCard).click();
-      _.assertHelper.AssertNetworkStatus("fetchTemplate");
-
-      cy.get(template.templateDialogBox).should("be.visible");
-      cy.get(template.templateCard).first().click();
-      cy.get(template.templateViewForkButton).first().click();
+      PageList.AddNewPage("Add page from template");
+      _.agHelper.AssertElementExist(template.templateDialogBox);
+      _.agHelper.GetNClick(template.templateCard);
+      _.agHelper.GetNClick(template.templateViewForkButton);
       cy.waitUntil(() => cy.xpath("//span[text()='Setting up the template']"), {
         errorMsg: "Setting Templates did not finish even after 75 seconds",
         timeout: 75000,
@@ -90,11 +87,11 @@ describe(
         cy.wait(20000); // add wait for page to save
         cy.switchGitBranch(branchName);
         cy.get(homePage.publishButton).click({ force: true });
-        _.agHelper.AssertElementExist(_.gitSync._bottomBarPull);
-        cy.get(gitSyncLocators.commitCommentInput).type("Initial Commit");
-        cy.get(gitSyncLocators.commitButton).click();
-        _.agHelper.AssertElementExist(_.gitSync._bottomBarPull);
-        cy.get(gitSyncLocators.closeGitSyncModal).click();
+        _.agHelper.AssertElementExist(_.gitSync.locators.quickActionsPullBtn);
+        cy.get(_.gitSync.locators.opsCommitInput).type("Initial Commit");
+        cy.get(_.gitSync.locators.opsCommitBtn).click();
+        _.agHelper.AssertElementExist(_.gitSync.locators.quickActionsPullBtn);
+        _.gitSync.CloseOpsModal();
       });
     });
 

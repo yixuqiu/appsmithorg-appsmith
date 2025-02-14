@@ -9,6 +9,7 @@ import {
   agHelper,
   deployMode,
 } from "../../../../support/Objects/ObjectsCore";
+import BottomTabs from "../../../../support/Pages/IDE/BottomTabs";
 
 describe(
   "Test Create Api and Bind to Table widget",
@@ -22,7 +23,7 @@ describe(
     it("1. Test_Add users api and execute api", function () {
       apiPage.CreateAndFillApi(this.dataSet.userApi + "/mock-api?records=10");
       cy.RunAPI();
-      cy.get(apiLocators.jsonResponseTab).click();
+      BottomTabs.response.selectResponseResponseTypeFromMenu("JSON");
       cy.get(apiLocators.responseBody)
         .contains("name")
         .siblings("span")
@@ -70,9 +71,7 @@ describe(
       EditorNavigation.SelectEntityByName("Table1", EntityType.Widget, {}, [
         "Container3",
       ]);
-      cy.togglebarDisable(
-        ".t--property-control-enableclientsidesearch input[type='checkbox']",
-      );
+      agHelper.CheckUncheck(commonlocators.enableClientSideSearch, false);
 
       cy.get(".t--widget-tablewidget .t--search-input").first().type("Currey");
       cy.wait(3000);

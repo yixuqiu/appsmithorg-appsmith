@@ -1,16 +1,19 @@
 package com.appsmith.server.domains.ce;
 
-import com.appsmith.external.models.Policy;
 import com.appsmith.server.constants.ArtifactType;
 import com.appsmith.server.domains.GitArtifactMetadata;
-
-import java.util.Set;
 
 public interface ArtifactCE {
 
     String getId();
 
+    default String getBaseId() {
+        return getId();
+    }
+
     String getName();
+
+    void setName(String artifactName);
 
     String getWorkspaceId();
 
@@ -22,19 +25,21 @@ public interface ArtifactCE {
 
     void setGitArtifactMetadata(GitArtifactMetadata gitArtifactMetadata);
 
-    String getUnpublishedThemeId();
+    default String getUnpublishedThemeId() {
+        return null;
+    }
 
-    String getPublishedThemeId();
+    default String getPublishedThemeId() {
+        return null;
+    }
 
     void makePristine();
 
     void sanitiseToExportDBObject();
 
-    void setUnpublishedThemeId(String themeId);
+    default void setUnpublishedThemeId(String themeId) {}
 
-    void setPublishedThemeId(String themeId);
-
-    Set<Policy> getPolicies();
+    default void setPublishedThemeId(String themeId) {}
 
     ArtifactType getArtifactType();
 }

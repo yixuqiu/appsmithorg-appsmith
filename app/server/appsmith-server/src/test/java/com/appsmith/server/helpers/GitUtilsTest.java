@@ -3,6 +3,7 @@ package com.appsmith.server.helpers;
 import com.appsmith.server.domains.Application;
 import com.appsmith.server.domains.AutoCommitConfig;
 import com.appsmith.server.domains.GitArtifactMetadata;
+import com.appsmith.server.exceptions.AppsmithError;
 import com.appsmith.server.exceptions.AppsmithException;
 import net.minidev.json.JSONObject;
 import org.junit.jupiter.api.Test;
@@ -10,8 +11,8 @@ import reactor.test.StepVerifier;
 
 import java.util.UUID;
 
-import static com.appsmith.server.helpers.GitUtils.isApplicationConnectedToGit;
-import static com.appsmith.server.helpers.GitUtils.isDefaultBranchedApplication;
+import static com.appsmith.server.helpers.GitUtils.isArtifactConnectedToGit;
+import static com.appsmith.server.helpers.GitUtils.isDefaultBranchedArtifact;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -60,6 +61,29 @@ public class GitUtilsTest {
         assertThat(GitUtils.convertSshUrlToBrowserSupportedUrl(
                         "ssh://git@tim.tam.example.com:9876/v3/sladeping/pyhe/SpaceJunk"))
                 .isEqualTo("https://tim.tam.example.com/v3/sladeping/pyhe/SpaceJunk");
+
+        // custom ssh username:
+        assertThat(GitUtils.convertSshUrlToBrowserSupportedUrl("abc-xy@vs-ssh.visualstudio.com:v3/newJet/ai/zilla"))
+                .isEqualTo("https://vs-ssh.visualstudio.com/v3/newJet/ai/zilla");
+
+        assertThat(GitUtils.convertSshUrlToBrowserSupportedUrl(
+                        "ssh://cust-om@vs-ssh.visualstudio.com:/v3/newJet/ai/zilla.git"))
+                .isEqualTo("https://vs-ssh.visualstudio.com/v3/newJet/ai/zilla");
+
+        assertThat(GitUtils.convertSshUrlToBrowserSupportedUrl("ssh://xy-ab@sub.domain.xy:/v3/xy-ab/path/path.git"))
+                .isEqualTo("https://sub.domain.xy/v3/xy-ab/path/path");
+
+        assertThat(GitUtils.convertSshUrlToBrowserSupportedUrl("ssh://domain.xy:/path/path.git"))
+                .isEqualTo("https://domain.xy/path/path");
+
+        assertThat(GitUtils.convertSshUrlToBrowserSupportedUrl("ssh://user@domain.com/repopath.git"))
+                .isEqualTo("https://domain.com/repopath");
+
+        AppsmithException exception = assertThrows(
+                AppsmithException.class,
+                () -> GitUtils.convertSshUrlToBrowserSupportedUrl(
+                        "ssh://cust-om@vs-ssh.visualstudio.com:v3/newJet/ai/zilla.git"));
+        assertThat(exception.getAppErrorCode()).isEqualTo(AppsmithError.INVALID_GIT_CONFIGURATION.getAppErrorCode());
     }
 
     @Test
@@ -131,6 +155,18 @@ public class GitUtilsTest {
         assertThat(GitUtils.getRepoName("user@host.xz:path/to/repo.git")).isEqualTo("repo");
         assertThat(GitUtils.getRepoName("org-987654321@github.com:org_name/repository_name.git"))
                 .isEqualTo("repository_name");
+
+        // custom ssh username:
+        assertThat(GitUtils.getRepoName("custom@vs-ssh.visualstudio.com:v3/newJet/ai/zilla"))
+                .isEqualTo("zilla");
+
+        assertThat(GitUtils.getRepoName("ssh://custom@vs-ssh.visualstudio.com:/v3/newJet/ai/zilla"))
+                .isEqualTo("zilla");
+
+        assertThat(GitUtils.getRepoName("ssh://xy-ab@sub.domain.xy:/v3/xy-ab/path/path.git"))
+                .isEqualTo("path");
+
+        assertThat(GitUtils.getRepoName("ssh://domain.xy:/path/path.git")).isEqualTo("path");
     }
 
     @Test
@@ -180,7 +216,7 @@ public class GitUtilsTest {
         gitMetadata.setDefaultApplicationId(UUID.randomUUID().toString());
         connectedApplication.setGitApplicationMetadata(gitMetadata);
 
-        assertTrue(isApplicationConnectedToGit(connectedApplication));
+        assertTrue(isArtifactConnectedToGit(connectedApplication.getGitArtifactMetadata()));
     }
 
     @Test
@@ -188,7 +224,7 @@ public class GitUtilsTest {
         // Create a mock Application with null Git metadata
         Application notConnectedApplication = new Application();
 
-        assertFalse(isApplicationConnectedToGit(notConnectedApplication));
+        assertFalse(isArtifactConnectedToGit(notConnectedApplication.getGitArtifactMetadata()));
     }
 
     @Test
@@ -199,7 +235,7 @@ public class GitUtilsTest {
         gitMetadata.setRemoteUrl("https://git.example.com/repo.git");
         notConnectedApplication.setGitApplicationMetadata(gitMetadata);
 
-        assertFalse(isApplicationConnectedToGit(notConnectedApplication));
+        assertFalse(isArtifactConnectedToGit(notConnectedApplication.getGitArtifactMetadata()));
     }
 
     @Test
@@ -210,7 +246,7 @@ public class GitUtilsTest {
         gitMetadata.setDefaultApplicationId(UUID.randomUUID().toString());
         notConnectedApplication.setGitApplicationMetadata(gitMetadata);
 
-        assertFalse(isApplicationConnectedToGit(notConnectedApplication));
+        assertFalse(isArtifactConnectedToGit(notConnectedApplication.getGitArtifactMetadata()));
     }
 
     @Test
@@ -222,7 +258,7 @@ public class GitUtilsTest {
         gitMetadata.setRemoteUrl("");
         notConnectedApplication.setGitApplicationMetadata(gitMetadata);
 
-        assertFalse(isApplicationConnectedToGit(notConnectedApplication));
+        assertFalse(isArtifactConnectedToGit(notConnectedApplication.getGitArtifactMetadata()));
     }
 
     @Test
@@ -232,11 +268,11 @@ public class GitUtilsTest {
         GitArtifactMetadata metadata = new GitArtifactMetadata();
         metadata.setDefaultApplicationId(UUID.randomUUID().toString());
         metadata.setRemoteUrl("https://git.example.com/repo.git");
-        metadata.setBranchName("main");
+        metadata.setRefName("main");
         metadata.setDefaultBranchName("main");
         defaultBranchApplication.setGitApplicationMetadata(metadata);
 
-        assertTrue(isDefaultBranchedApplication(defaultBranchApplication));
+        assertTrue(isDefaultBranchedArtifact(defaultBranchApplication.getGitArtifactMetadata()));
     }
 
     @Test
@@ -246,11 +282,11 @@ public class GitUtilsTest {
         GitArtifactMetadata metadata = new GitArtifactMetadata();
         metadata.setDefaultApplicationId(UUID.randomUUID().toString());
         metadata.setRemoteUrl("https://git.example.com/repo.git");
-        metadata.setBranchName("feature-branch");
+        metadata.setRefName("feature-branch");
         metadata.setDefaultBranchName("main");
         nonDefaultBranchApplication.setGitApplicationMetadata(metadata);
 
-        assertFalse(isDefaultBranchedApplication(nonDefaultBranchApplication));
+        assertFalse(isDefaultBranchedArtifact(nonDefaultBranchApplication.getGitArtifactMetadata()));
     }
 
     @Test
@@ -258,7 +294,7 @@ public class GitUtilsTest {
         // Create a mock Application without connected Git metadata
         Application notConnectedApplication = new Application();
 
-        assertFalse(isDefaultBranchedApplication(notConnectedApplication));
+        assertFalse(isDefaultBranchedArtifact(notConnectedApplication.getGitArtifactMetadata()));
     }
 
     @Test
@@ -267,7 +303,7 @@ public class GitUtilsTest {
         Application nullMetadataApplication = new Application();
         nullMetadataApplication.setGitApplicationMetadata(null);
 
-        assertFalse(isDefaultBranchedApplication(nullMetadataApplication));
+        assertFalse(isDefaultBranchedArtifact(nullMetadataApplication.getGitArtifactMetadata()));
     }
 
     @Test
@@ -277,11 +313,11 @@ public class GitUtilsTest {
         GitArtifactMetadata metadata = new GitArtifactMetadata();
         metadata.setDefaultApplicationId(UUID.randomUUID().toString());
         metadata.setRemoteUrl("https://git.example.com/repo.git");
-        metadata.setBranchName(null);
+        metadata.setRefName(null);
         metadata.setDefaultBranchName("main");
         nullBranchNameApplication.setGitApplicationMetadata(metadata);
 
-        assertFalse(isDefaultBranchedApplication(nullBranchNameApplication));
+        assertFalse(isDefaultBranchedArtifact(nullBranchNameApplication.getGitArtifactMetadata()));
     }
 
     @Test
@@ -291,11 +327,11 @@ public class GitUtilsTest {
         GitArtifactMetadata metadata = new GitArtifactMetadata();
         metadata.setDefaultApplicationId(UUID.randomUUID().toString());
         metadata.setRemoteUrl("https://git.example.com/repo.git");
-        metadata.setBranchName("main");
+        metadata.setRefName("main");
         metadata.setDefaultBranchName(null);
         nullDefaultBranchNameApplication.setGitApplicationMetadata(metadata);
 
-        assertFalse(isDefaultBranchedApplication(nullDefaultBranchNameApplication));
+        assertFalse(isDefaultBranchedArtifact(nullDefaultBranchNameApplication.getGitArtifactMetadata()));
     }
 
     @Test
